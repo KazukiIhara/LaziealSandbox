@@ -1,0 +1,3 @@
+[submodule "Dependencies/LaziealRuntime"]
+	path = Dependencies/LaziealRuntime
+	url = ../LaziealRuntime
