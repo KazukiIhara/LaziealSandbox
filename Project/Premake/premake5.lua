@@ -46,9 +46,15 @@ project "LaziealSandbox"
     location "../"
     characterset "Unicode"
 
-    files { "../main.cpp" }
+    files {
+        "../main.cpp",
+        "../RuntimeSetting.ini",
+        "../Src/**.cpp",
+        "../Src/**.h",
+    }
 
     includedirs {
+        "../Src",
         "../../Dependencies/LaziealRuntime/Project/Include",
         "../../Dependencies/LaziealRuntime/Dependencies/LaziealGraphicsFramework/Project/Include",
     }
