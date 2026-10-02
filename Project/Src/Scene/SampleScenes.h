@@ -4,7 +4,7 @@
 
 #include <string>
 
-struct SceneData final {
+struct SceneData {
 	int collisionCount = 0;
 };
 
