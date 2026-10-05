@@ -45,33 +45,46 @@ namespace {
 		ButtonEntry{ GamepadButtonCode::Misc6, "Misc 6" },
 	};
 
-	const char* ToString(GamepadType type) {
+	const char* GetGamepadTypeName(GamepadType type) {
 		switch (type) {
-		case GamepadType::Standard: return "Standard";
-		case GamepadType::Xbox360: return "Xbox 360";
-		case GamepadType::XboxOne: return "Xbox One";
-		case GamepadType::PlayStation3: return "PlayStation 3";
-		case GamepadType::PlayStation4: return "PlayStation 4";
-		case GamepadType::PlayStation5: return "PlayStation 5";
-		case GamepadType::SwitchPro: return "Nintendo Switch Pro";
-		case GamepadType::JoyConLeft: return "Joy-Con (L)";
-		case GamepadType::JoyConRight: return "Joy-Con (R)";
-		case GamepadType::JoyConPair: return "Joy-Con pair";
-		case GamepadType::GameCube: return "GameCube";
-		case GamepadType::Steam: return "Steam Controller";
-		default: return "Unknown";
+		case GamepadType::Standard:
+			return "Standard";
+		case GamepadType::Xbox360:
+			return "Xbox 360";
+		case GamepadType::XboxOne:
+			return "Xbox One";
+		case GamepadType::PlayStation3:
+			return "PlayStation 3";
+		case GamepadType::PlayStation4:
+			return "PlayStation 4";
+		case GamepadType::PlayStation5:
+			return "PlayStation 5";
+		case GamepadType::SwitchPro:
+			return "Nintendo Switch Pro";
+		case GamepadType::JoyConLeft:
+			return "Joy-Con (L)";
+		case GamepadType::JoyConRight:
+			return "Joy-Con (R)";
+		case GamepadType::JoyConPair:
+			return "Joy-Con pair";
+		case GamepadType::GameCube:
+			return "GameCube";
+		case GamepadType::Steam:
+			return "Steam Controller";
+		default:
+			return "Unknown";
 		}
 	}
 
 	void DrawAxis(const char* label, float value) {
-		char overlay[32]{};
-		sprintf_s(overlay, "%+.3f", value);
+		char valueText[32]{};
+		sprintf_s(valueText, "%+.3f", value);
 		ImGui::TextUnformatted(label);
 		ImGui::SameLine(90.0f);
 		ImGui::ProgressBar(
 			(value + 1.0f) * 0.5f,
 			ImVec2(180.0f, 0.0f),
-			overlay);
+			valueText);
 	}
 
 	void DrawVector(const char* label, const Vector3& value, const char* unit) {
@@ -145,15 +158,15 @@ namespace {
 		const std::string name = gamepad.Name();
 		ImGui::Text("Slot: %u", index);
 		ImGui::Text("Name: %s", name.empty() ? "(unnamed)" : name.c_str());
-		ImGui::Text("Type: %s", ToString(gamepad.Type()));
+		ImGui::Text("Type: %s", GetGamepadTypeName(gamepad.Type()));
 
-		const Vector2 left = gamepad.LeftStick();
-		const Vector2 right = gamepad.RightStick();
+		const Vector2 leftStick = gamepad.LeftStick();
+		const Vector2 rightStick = gamepad.RightStick();
 		ImGui::SeparatorText("Axes");
-		DrawAxis("Left X", left.x);
-		DrawAxis("Left Y", left.y);
-		DrawAxis("Right X", right.x);
-		DrawAxis("Right Y", right.y);
+		DrawAxis("Left X", leftStick.x);
+		DrawAxis("Left Y", leftStick.y);
+		DrawAxis("Right X", rightStick.x);
+		DrawAxis("Right Y", rightStick.y);
 		DrawAxis("Left trigger", gamepad.LeftTrigger());
 		DrawAxis("Right trigger", gamepad.RightTrigger());
 
@@ -172,22 +185,22 @@ GamepadTestScene::GamepadTestScene(const InitData& init) :
 void GamepadTestScene::Update() {
 	UpdateCamera();
 
-	const std::optional<Gamepad> left = JoyCon::Left();
-	const std::optional<Gamepad> right = JoyCon::Right();
-	if (left.has_value() != wasLeftConnected_) {
+	const std::optional<Gamepad> leftJoyCon = JoyCon::Left();
+	const std::optional<Gamepad> rightJoyCon = JoyCon::Right();
+	if (leftJoyCon.has_value() != wasLeftConnected_) {
 		leftRotation_ = {};
 	}
-	if (right.has_value() != wasRightConnected_) {
+	if (rightJoyCon.has_value() != wasRightConnected_) {
 		rightRotation_ = {};
 	}
-	wasLeftConnected_ = left.has_value();
-	wasRightConnected_ = right.has_value();
+	wasLeftConnected_ = leftJoyCon.has_value();
+	wasRightConnected_ = rightJoyCon.has_value();
 
-	if (left) {
-		leftRotation_ += left->RotationDelta();
+	if (leftJoyCon) {
+		leftRotation_ += leftJoyCon->RotationDelta();
 	}
-	if (right) {
-		rightRotation_ += right->RotationDelta();
+	if (rightJoyCon) {
+		rightRotation_ += rightJoyCon->RotationDelta();
 	}
 	if (Key::R.Trigger()) {
 		leftRotation_ = {};
@@ -224,14 +237,14 @@ void GamepadTestScene::Draw() const {
 			JoyCon::Left() ? "connected" : "disconnected",
 			JoyCon::Right() ? "connected" : "disconnected");
 
-		bool found = false;
+		bool isGamepadFound = false;
 		if (ImGui::BeginTabBar("ConnectedGamepads")) {
 			for (uint32_t index = 0; index < Gamepad::MaxCount; ++index) {
 				const Gamepad gamepad{ index };
 				if (!gamepad.IsConnected()) {
 					continue;
 				}
-				found = true;
+				isGamepadFound = true;
 				const std::string label =
 					gamepad.Name() + "##gamepad" + std::to_string(index);
 				if (ImGui::BeginTabItem(label.c_str())) {
@@ -242,7 +255,7 @@ void GamepadTestScene::Draw() const {
 			ImGui::EndTabBar();
 		}
 
-		if (!found) {
+		if (!isGamepadFound) {
 			ImGui::Spacing();
 			ImGui::TextColored(
 				ImVec4(1.0f, 0.75f, 0.20f, 1.0f),
