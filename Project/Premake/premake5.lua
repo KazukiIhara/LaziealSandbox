@@ -8,6 +8,7 @@ workspace "LaziealSandbox"
     objdir "../../generated/obj/%{prj.name}/%{cfg.buildcfg}"
 
 local graphicsProject = "../../Dependencies/LaziealRuntime/Dependencies/LaziealGraphicsFramework/Project"
+local sdlRoot = "../../Dependencies/LaziealRuntime/Dependencies/SDL3"
 
 externalproject "DirectXTex"
     location (graphicsProject)
@@ -57,6 +58,7 @@ project "LaziealSandbox"
         "../Src",
         "../../Dependencies/LaziealRuntime/Project/Include",
         "../../Dependencies/LaziealRuntime/Dependencies/LaziealGraphicsFramework/Project/Include",
+        "../../Dependencies/LaziealRuntime/Dependencies/LaziealGraphicsFramework/Project/Externals/imgui",
     }
 
     dependson {
@@ -78,7 +80,10 @@ project "LaziealSandbox"
         "dxguid",
         "dxcompiler",
         "winmm",
+        "SDL3",
     }
+
+    libdirs { sdlRoot .. "/lib/x64" }
 
     defines { "NOMINMAX" }
     warnings "High"
@@ -89,7 +94,8 @@ project "LaziealSandbox"
 
     postbuildcommands {
         'copy "$(WindowsSdkDir)bin\\$(TargetPlatformVersion)\\x64\\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"',
-        'copy "$(WindowsSdkDir)bin\\$(TargetPlatformVersion)\\x64\\dxil.dll" "$(TargetDir)dxil.dll"'
+        'copy "$(WindowsSdkDir)bin\\$(TargetPlatformVersion)\\x64\\dxil.dll" "$(TargetDir)dxil.dll"',
+        'copy /Y "$(SolutionDir)..\\Dependencies\\LaziealRuntime\\Dependencies\\SDL3\\lib\\x64\\SDL3.dll" "$(TargetDir)SDL3.dll"'
     }
 
     filter "configurations:Debug"

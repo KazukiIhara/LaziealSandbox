@@ -8,7 +8,9 @@ void TitleScene::Update() {
 	rotation_ += static_cast<float>(System::DeltaTime());
 	UpdateCamera();
 
-	if (Key::Enter.Trigger()) {
+	if (Key::G.Trigger()) {
+		ChangeScene(SceneNames::GamepadTest);
+	} else if (Key::Enter.Trigger()) {
 		ChangeScene(SceneNames::Game);
 	}
 }
