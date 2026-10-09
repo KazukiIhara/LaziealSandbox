@@ -38,6 +38,30 @@ RuntimeとGraphicsのプロジェクトもソリューションから参照さ�
 実行中のタイトル、ウィンドウサイズ、フルスクリーン状態は`LGF::Window`から変更できます。
 アセットルートは初期化後に変更できません。
 
+## JSONパラメータ
+
+`LGF::ParameterDocument`は、階層化した型付きパラメータをJSONファイルへ
+読み書きします。対応型は`bool`、`int32_t`、`float`、`Vector2`、`Vector3`、
+`Vector4`、`std::string`です。
+
+```cpp
+LGF::ParameterDocument parameters;
+if (parameters.Load("Assets/Parameters/FriedRice.json")) {
+    const float friction =
+        parameters.GetOr<float>("Physics/DynamicFriction", 0.45f);
+}
+```
+
+`LaziealParameterEditor`はLaziealRuntime側のソリューションに生成される
+開発ツール用の実行ファイルです。
+`Assets/Parameters`内のJSONをImGuiから作成・編集・保存できます。
+保存は明示操作でのみ行われ、読み込みに失敗しても現在のドキュメントは保持されます。
+
+LaziealRuntime側でビルドした後、`Tools/DeployParameterEditor.bat`を実行すると、
+`Tools/ParameterEditor`へ設定、アセット、DLLを含む実行一式が配置されます。
+引数を省略した場合は`Develop`構成が使用されます。別構成を配置する場合は、
+`Tools/DeployParameterEditor.bat Debug`のように構成名を指定します。
+
 ## ゲームパッドとJoy-Con
 
 ゲームパッド入力にはSDL3を使用しています。既定では左右のJoy-Conを合成せず、

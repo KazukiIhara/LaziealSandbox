@@ -13,6 +13,7 @@
 
 # Build outputs
 /generated/
+/Tools/ParameterEditor/
 
 # Runtime state
 /Project/Logs/
