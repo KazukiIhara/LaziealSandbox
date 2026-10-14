@@ -46,16 +46,22 @@ void PointLightScene::Update() {
 	if (!isPaused_) {
 		lightAngle_ += kLightAngularSpeed * static_cast<float>(System::DeltaTime());
 	}
-	pointLight_.position = {
-		std::cos(lightAngle_) * kLightOrbitRadius,
-		kLightHeight,
-		std::sin(lightAngle_) * kLightOrbitRadius,
-	};
+	for (std::size_t index = 0; index < pointLights_.size(); ++index) {
+		const float angle = lightAngle_ + Math::PI * 2.0f *
+			static_cast<float>(index) / static_cast<float>(pointLights_.size());
+		pointLights_[index].position = {
+			std::cos(angle) * kLightOrbitRadius,
+			kLightHeight,
+			std::sin(angle) * kLightOrbitRadius,
+		};
+	}
 }
 
 void PointLightScene::Draw() const {
 	DrawStage(fillLight_);
-	pointLight_.SetScene();
+	for (const PointLight& pointLight : pointLights_) {
+		pointLight.SetScene();
+	}
 
 	const Material3D sphereMaterial{
 		.color = Color::White,
@@ -76,24 +82,25 @@ void PointLightScene::Draw() const {
 		}
 	}
 
-	lightMarker_.Draw(
-		Math::MakeTranslateMatrix(pointLight_.position),
-		Material3D{
-			.color = pointLight_.color,
-			.unlit = true,
-		});
+	for (const PointLight& pointLight : pointLights_) {
+		lightMarker_.Draw(
+			Math::MakeTranslateMatrix(pointLight.position),
+			Material3D{
+				.color = pointLight.color,
+				.unlit = true,
+			});
+	}
 
 	ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin("Point Light Demo")) {
-		ImGui::TextUnformatted("PointLight::SetScene() is called every frame.");
+		ImGui::Text("%zu PointLight::SetScene() calls per frame.", pointLights_.size());
 		ImGui::TextUnformatted("Space: pause orbit | R: reset orbit | Escape: title");
 		ImGui::Separator();
+		ImGui::Text("Maximum point lights: %u", PointLight::MaxCount);
 		ImGui::Text(
-			"Position: (%+.2f, %+.2f, %+.2f)",
-			pointLight_.position.x,
-			pointLight_.position.y,
-			pointLight_.position.z);
-		ImGui::Text("Intensity: %.2f | Range: %.2f", pointLight_.intensity, pointLight_.range);
+			"Intensity: %.2f | Range: %.2f",
+			pointLights_.front().intensity,
+			pointLights_.front().range);
 		ImGui::Text("Orbit: %s", isPaused_ ? "Paused" : "Playing");
 	}
 	ImGui::End();
