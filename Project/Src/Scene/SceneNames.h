@@ -5,6 +5,7 @@
 namespace SceneNames {
 
 	inline const std::string GamepadTest = "GamepadTest";
+	inline const std::string PointLight = "PointLight";
 	inline const std::string Title = "Title";
 	inline const std::string Game = "Game";
 	inline const std::string Result = "Result";

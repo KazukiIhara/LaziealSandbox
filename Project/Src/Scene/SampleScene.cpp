@@ -26,8 +26,12 @@ void SampleScene::UpdateCamera() {
 }
 
 void SampleScene::DrawStage() const {
+	DrawStage(light_);
+}
+
+void SampleScene::DrawStage(const DirectionalLight& light) const {
 	camera_.SetScene();
-	light_.SetScene();
+	light.SetScene();
 	ground_.Draw(
 		Math::MakeTranslateMatrix({ 0.0f, -0.02f, 0.0f }),
 		Color::DarkGray);

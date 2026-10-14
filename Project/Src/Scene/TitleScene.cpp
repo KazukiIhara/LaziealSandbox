@@ -10,6 +10,8 @@ void TitleScene::Update() {
 
 	if (Key::G.Trigger()) {
 		ChangeScene(SceneNames::GamepadTest);
+	} else if (Key::P.Trigger()) {
+		ChangeScene(SceneNames::PointLight);
 	} else if (Key::Enter.Trigger()) {
 		ChangeScene(SceneNames::Game);
 	}

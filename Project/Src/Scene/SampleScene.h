@@ -9,6 +9,7 @@ public:
 protected:
 	void UpdateCamera();
 	void DrawStage() const;
+	void DrawStage(const LGF::DirectionalLight& light) const;
 
 private:
 	LGF::DebugCamera3D camera_;
