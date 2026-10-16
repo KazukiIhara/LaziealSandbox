@@ -4,6 +4,10 @@
 
 using namespace LGF;
 
+TitleScene::TitleScene(const InitData& init)
+	: SampleScene(init),
+	spherePos_(Parameter::Get<Vector3>("Sphere.json", "Pos")) {}
+
 void TitleScene::Update() {
 	rotation_ += static_cast<float>(System::DeltaTime());
 	UpdateCamera();
@@ -19,7 +23,6 @@ void TitleScene::Update() {
 
 void TitleScene::Draw() const {
 	DrawStage();
-
 	const Quaternion rotation = Math::MakeRotateAxisAngle(
 		{ 0.0f, 1.0f, 0.0f },
 		rotation_);
@@ -32,6 +35,6 @@ void TitleScene::Draw() const {
 			{ 1.0f, 1.0f, 1.0f }, rotation, { 0.0f, 1.25f, 0.0f }),
 		Color::Gold);
 	sphere_.Draw(
-		Math::MakeTranslateMatrix({ 2.5f, 1.0f, 0.0f }),
+		Math::MakeTranslateMatrix(spherePos_),
 		Color::Turquoise);
 }

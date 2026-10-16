@@ -40,6 +40,21 @@ RuntimeとGraphicsのプロジェクトもソリューションから参照さ�
 
 ## JSONパラメータ
 
+`LGF::Parameter`を使うと、`Assets/Parameters`内のJSONから型付きの値を
+静的APIで取得できます。ファイルは初回アクセス時に読み込まれ、キャッシュされます。
+
+```cpp
+const LGF::Vector3 position =
+    LGF::Parameter::Get<LGF::Vector3>("Sphere.json", "Pos");
+const float speed =
+    LGF::Parameter::GetOr<float>("Player.json", "Speed", 1.0f);
+```
+
+必須パラメータには`Get`、既定値を許容するパラメータには`GetOr`、
+取得失敗を呼び出し側で処理する場合は`TryGet`を使用します。
+ファイルを読み直す場合は`Reload`、全キャッシュを破棄する場合は`ClearCache`を
+使用します。
+
 `LGF::ParameterDocument`は、階層化した型付きパラメータをJSONファイルへ
 読み書きします。対応型は`bool`、`int32_t`、`float`、`Vector2`、`Vector3`、
 `Vector4`、`std::string`です。
