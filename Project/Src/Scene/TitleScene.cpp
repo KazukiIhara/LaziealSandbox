@@ -32,17 +32,12 @@ void TitleScene::Update() {
 	rotation_ += deltaTime;
 	Vector2 cameraRotation{};
 
-	for (uint32_t index = 0; index < Gamepad::MaxCount; ++index) {
-		const Gamepad gamepad{ index };
-		if (!gamepad.IsConnected()) {
-			continue;
-		}
-
+	if (const std::optional<Gamepad> leftJoyCon = JoyCon::Left()) {
 		Vector2 dPad{
-			static_cast<float>(gamepad.Button(GamepadButtonCode::DPadRight).Press()) -
-				static_cast<float>(gamepad.Button(GamepadButtonCode::DPadLeft).Press()),
-			static_cast<float>(gamepad.Button(GamepadButtonCode::DPadUp).Press()) -
-				static_cast<float>(gamepad.Button(GamepadButtonCode::DPadDown).Press()),
+			static_cast<float>(leftJoyCon->Button(GamepadButtonCode::DPadRight).Press()) -
+				static_cast<float>(leftJoyCon->Button(GamepadButtonCode::DPadLeft).Press()),
+			static_cast<float>(leftJoyCon->Button(GamepadButtonCode::DPadUp).Press()) -
+				static_cast<float>(leftJoyCon->Button(GamepadButtonCode::DPadDown).Press()),
 		};
 		if (Math::LengthSq(dPad) > 1.0f) {
 			dPad = Math::Normalize(dPad);
@@ -50,11 +45,13 @@ void TitleScene::Update() {
 		boxPos_.x += dPad.x * kBoxMoveSpeed * deltaTime;
 		boxPos_.y += dPad.y * kBoxMoveSpeed * deltaTime;
 
-		const Vector2 leftStick = ApplyStickDeadZone(gamepad.LeftStick());
+		const Vector2 leftStick = ApplyStickDeadZone(leftJoyCon->LeftStick());
 		boxPos_.x += leftStick.x * kBoxMoveSpeed * deltaTime;
 		boxPos_.z += leftStick.y * kBoxMoveSpeed * deltaTime;
-		cameraRotation = ApplyStickDeadZone(gamepad.RightStick());
-		break;
+	}
+
+	if (const std::optional<Gamepad> rightJoyCon = JoyCon::Right()) {
+		cameraRotation = ApplyStickDeadZone(rightJoyCon->RightStick());
 	}
 
 	UpdateCamera(cameraRotation);
