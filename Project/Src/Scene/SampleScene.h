@@ -7,7 +7,7 @@ public:
 	explicit SampleScene(const InitData& init);
 
 protected:
-	void UpdateCamera();
+	void UpdateCamera(const LGF::Vector2& rotationInput = {});
 	void DrawStage() const;
 	void DrawStage(const LGF::DirectionalLight& light) const;
 

@@ -21,7 +21,10 @@ SampleScene::SampleScene(const InitData& init) :
 	camera_.pitch = 22.0f * Math::DEG_TO_RAD;
 }
 
-void SampleScene::UpdateCamera() {
+void SampleScene::UpdateCamera(const Vector2& rotationInput) {
+	const float deltaTime = static_cast<float>(System::DeltaTime());
+	camera_.yaw -= rotationInput.x * camera_.rotationSpeed * deltaTime;
+	camera_.pitch += rotationInput.y * camera_.rotationSpeed * deltaTime;
 	camera_.Update();
 }
 

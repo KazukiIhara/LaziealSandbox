@@ -90,10 +90,20 @@ enabled = true
 combineJoyCons = false
 verticalJoyCons = true
 backgroundInput = false
+
+[Input.Gamepad.JoyCon.Left]
+gyroscopeEnabled = true
+accelerometerEnabled = true
+
+[Input.Gamepad.JoyCon.Right]
+gyroscopeEnabled = true
+accelerometerEnabled = true
 ```
 
 `verticalJoyCons = true`は、左右のJoy-Conを両手に縦持ちする場合の設定です。
 Joy-Conを1本ずつ横持ちする場合は`false`に変更してください。
+`gyroscopeEnabled`と`accelerometerEnabled`は左右のJoy-Conごとに設定でき、
+`false`にすると対応するセンサーを有効化しません。設定を省略した場合は`true`です。
 
 通常のゲームパッドはインデックスを指定して取得します。
 
