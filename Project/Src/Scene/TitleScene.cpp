@@ -6,7 +6,8 @@ using namespace LGF;
 
 TitleScene::TitleScene(const InitData& init)
 	: SampleScene(init),
-	spherePos_(Parameter::Get<Vector3>("Sphere.json", "Pos")) {}
+	spherePos_(Parameter::GetOr<Vector3>("Sphere.json", "Pos", spherePos_)) {
+}
 
 void TitleScene::Update() {
 	rotation_ += static_cast<float>(System::DeltaTime());

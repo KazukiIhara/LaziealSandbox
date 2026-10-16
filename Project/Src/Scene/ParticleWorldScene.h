@@ -12,16 +12,11 @@ public:
 	void Draw() const override;
 
 private:
-	enum class BoundaryType : uint8_t {
-		Box,
-		Sphere,
-		Cylinder,
-	};
-
 	void ResetSimulation();
-	void TossParticles();
+	void SpawnParticles();
+	void ScatterParticles();
 
 	LGF::Physics::ParticleWorld particleWorld_;
-	BoundaryType boundaryType_ = BoundaryType::Sphere;
+	uint64_t nextParticleId_ = 0u;
 	bool isPaused_ = false;
 };
