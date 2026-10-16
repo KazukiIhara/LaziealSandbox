@@ -54,7 +54,9 @@ if (parameters.Load("Assets/Parameters/FriedRice.json")) {
 
 `LaziealParameterEditor`はLaziealRuntime側のソリューションに生成される
 開発ツール用の実行ファイルです。
-`Assets/Parameters`内のJSONをImGuiから作成・編集・保存できます。
+初回起動時に選択したディレクトリ内のJSONをImGuiから作成・編集・保存できます。
+選択したディレクトリは次回起動時にも引き継がれ、ツールバーの`Change...`から
+変更できます。
 保存は明示操作でのみ行われ、読み込みに失敗しても現在のドキュメントは保持されます。
 
 LaziealRuntime側でビルドした後、`Tools/DeployParameterEditor.bat`を実行すると、
