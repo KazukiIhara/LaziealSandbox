@@ -128,11 +128,26 @@ void ParticleWorldScene::Draw() const {
 			: state.userData % 3u == 1u ? Color::Orange : Color::Yellow;
 		Sphere3D(state.radius).Draw(Math::MakeTranslateMatrix(state.position), color);
 	}
+	const Physics::ParticleWorldStepStatistics& statistics =
+		particleWorld_.GetLastStepStatistics();
 
 	ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin("ParticleWorld Demo")) {
 		ImGui::Text("Particles: %zu", particleWorld_.GetParticleCount());
 		ImGui::Text("Static colliders: %zu", particleWorld_.GetColliderCount());
+		ImGui::Text(
+			"Physics: %.3f ms | Candidate pairs: %llu",
+			statistics.totalMilliseconds,
+			static_cast<unsigned long long>(statistics.candidatePairCount));
+		ImGui::Text(
+			"Integrate %.3f | Broad phase %.3f | Position %.3f ms",
+			statistics.integrationMilliseconds,
+			statistics.broadPhaseMilliseconds,
+			statistics.positionSolveMilliseconds);
+		ImGui::Text(
+			"Velocity %.3f | Cleanup %.3f ms",
+			statistics.velocitySolveMilliseconds,
+			statistics.cleanupMilliseconds);
 		ImGui::Text("Simulation: %s", isPaused_ ? "Paused" : "Playing");
 		ImGui::Separator();
 		ImGui::TextUnformatted("E: spawn particles | T: scatter particles");

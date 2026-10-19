@@ -96,12 +96,27 @@ void SphericalShellCapScene::Draw() const {
 	const std::size_t removedParticleCount =
 		spawnedParticleCount_ - particleWorld_.GetParticleCount();
 	const std::size_t outsideCavityCount = CountParticlesOutsideCavity();
+	const Physics::ParticleWorldStepStatistics& statistics =
+		particleWorld_.GetLastStepStatistics();
 
 	ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin("SphericalShellCap Demo")) {
 		ImGui::Text("Particles: %zu", particleWorld_.GetParticleCount());
 		ImGui::Text("Outside cavity below rim: %zu", outsideCavityCount);
 		ImGui::Text("Removed outside world bounds: %zu", removedParticleCount);
+		ImGui::Text(
+			"Physics: %.3f ms | Candidate pairs: %llu",
+			statistics.totalMilliseconds,
+			static_cast<unsigned long long>(statistics.candidatePairCount));
+		ImGui::Text(
+			"Integrate %.3f | Broad phase %.3f | Position %.3f ms",
+			statistics.integrationMilliseconds,
+			statistics.broadPhaseMilliseconds,
+			statistics.positionSolveMilliseconds);
+		ImGui::Text(
+			"Velocity %.3f | Cleanup %.3f ms",
+			statistics.velocitySolveMilliseconds,
+			statistics.cleanupMilliseconds);
 		ImGui::Text("Automatic movement: %s", automaticMove_ ? "On" : "Off");
 		ImGui::Text("Simulation: %s", isPaused_ ? "Paused" : "Playing");
 		ImGui::Text(
