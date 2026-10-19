@@ -110,6 +110,12 @@ void SphericalShellCapScene::Draw() const {
 			parameters_.particleRestitution,
 			parameters_.particleFriction,
 			parameters_.linearDamping);
+		ImGui::Text(
+			"Slop %.3f | Correction %.2f | Max depenetration %.1f | Bounce threshold %.1f",
+			parameters_.penetrationSlop,
+			parameters_.positionCorrectionRate,
+			parameters_.maximumDepenetrationVelocity,
+			parameters_.bounceVelocityThreshold);
 		ImGui::TextWrapped("Parameters: %s", parameterStatus_.c_str());
 		ImGui::Separator();
 		ImGui::TextUnformatted("Left drag: move shell on XZ plane");
@@ -152,6 +158,31 @@ SphericalShellCapScene::DemoParameters SphericalShellCapScene::LoadParameters() 
 		32));
 	result.linearDamping = std::max(
 		Parameter::GetOr<float>(kParameterFileName, "World/LinearDamping", result.linearDamping),
+		0.0f);
+	result.penetrationSlop = std::max(
+		Parameter::GetOr<float>(
+			kParameterFileName,
+			"World/PenetrationSlop",
+			result.penetrationSlop),
+		0.0f);
+	result.positionCorrectionRate = std::clamp(
+		Parameter::GetOr<float>(
+			kParameterFileName,
+			"World/PositionCorrectionRate",
+			result.positionCorrectionRate),
+		0.0f,
+		1.0f);
+	result.maximumDepenetrationVelocity = std::max(
+		Parameter::GetOr<float>(
+			kParameterFileName,
+			"World/MaximumDepenetrationVelocity",
+			result.maximumDepenetrationVelocity),
+		0.0f);
+	result.bounceVelocityThreshold = std::max(
+		Parameter::GetOr<float>(
+			kParameterFileName,
+			"World/BounceVelocityThreshold",
+			result.bounceVelocityThreshold),
 		0.0f);
 
 	result.particleRadius = std::max(
@@ -209,6 +240,10 @@ Physics::ParticleWorldSettings SphericalShellCapScene::MakeWorldSettings(
 		.substepCount = parameters.substepCount,
 		.solverIterationCount = parameters.solverIterationCount,
 		.linearDamping = parameters.linearDamping,
+		.penetrationSlop = parameters.penetrationSlop,
+		.positionCorrectionRate = parameters.positionCorrectionRate,
+		.maximumDepenetrationVelocity = parameters.maximumDepenetrationVelocity,
+		.bounceVelocityThreshold = parameters.bounceVelocityThreshold,
 	};
 }
 

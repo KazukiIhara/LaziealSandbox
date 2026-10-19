@@ -7,7 +7,7 @@
         "step": 0.009999999776482582
       },
       "type": "Float",
-      "value": 0.20000000298023224
+      "value": 0.05000000074505806
     },
     "Mass": {
       "editor": {
@@ -16,7 +16,7 @@
         "step": 0.10000000149011612
       },
       "type": "Float",
-      "value": 1.0
+      "value": 2.0
     },
     "Radius": {
       "editor": {
@@ -25,7 +25,7 @@
         "step": 0.009999999776482582
       },
       "type": "Float",
-      "value": 0.18000000715255737
+      "value": 0.30000001192092896
     },
     "Restitution": {
       "editor": {
@@ -34,7 +34,7 @@
         "step": 0.009999999776482582
       },
       "type": "Float",
-      "value": 0.0
+      "value": 0.05000000074505806
     }
   },
   "Shell": {
@@ -45,7 +45,7 @@
         "step": 0.009999999776482582
       },
       "type": "Float",
-      "value": 0.800000011920929
+      "value": 0.0
     },
     "Height": {
       "editor": {
@@ -81,10 +81,19 @@
         "step": 0.009999999776482582
       },
       "type": "Float",
-      "value": 0.0
+      "value": 0.10000000149011612
     }
   },
   "World": {
+    "BounceVelocityThreshold": {
+      "editor": {
+        "max": 10.0,
+        "min": 0.0,
+        "step": 0.10000000149011612
+      },
+      "type": "Float",
+      "value": 0.800000011920929
+    },
     "BoundsMax": {
       "editor": {
         "step": 0.5
@@ -125,7 +134,34 @@
         "step": 0.05000000074505806
       },
       "type": "Float",
-      "value": 0.0
+      "value": 1.0
+    },
+    "MaximumDepenetrationVelocity": {
+      "editor": {
+        "max": 50.0,
+        "min": 0.0,
+        "step": 0.5
+      },
+      "type": "Float",
+      "value": 5.0
+    },
+    "PenetrationSlop": {
+      "editor": {
+        "max": 0.10000000149011612,
+        "min": 0.0,
+        "step": 0.0010000000474974513
+      },
+      "type": "Float",
+      "value": 0.10000000149011612
+    },
+    "PositionCorrectionRate": {
+      "editor": {
+        "max": 1.0,
+        "min": 0.0,
+        "step": 0.05000000074505806
+      },
+      "type": "Float",
+      "value": 0.20000000298023224
     },
     "SolverIterationCount": {
       "editor": {

@@ -22,6 +22,10 @@ private:
 		uint32_t substepCount = 8u;
 		uint32_t solverIterationCount = 8u;
 		float linearDamping = 0.6f;
+		float penetrationSlop = 0.005f;
+		float positionCorrectionRate = 0.2f;
+		float maximumDepenetrationVelocity = 5.0f;
+		float bounceVelocityThreshold = 0.8f;
 		float particleRadius = 0.18f;
 		float particleMass = 1.0f;
 		float particleRestitution = 0.03f;
