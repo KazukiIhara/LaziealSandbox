@@ -1,0 +1,149 @@
+{
+  "Particle": {
+    "Friction": {
+      "editor": {
+        "max": 1.0,
+        "min": 0.0,
+        "step": 0.009999999776482582
+      },
+      "type": "Float",
+      "value": 0.20000000298023224
+    },
+    "Mass": {
+      "editor": {
+        "max": 20.0,
+        "min": 0.009999999776482582,
+        "step": 0.10000000149011612
+      },
+      "type": "Float",
+      "value": 1.0
+    },
+    "Radius": {
+      "editor": {
+        "max": 1.0,
+        "min": 0.009999999776482582,
+        "step": 0.009999999776482582
+      },
+      "type": "Float",
+      "value": 0.18000000715255737
+    },
+    "Restitution": {
+      "editor": {
+        "max": 1.0,
+        "min": 0.0,
+        "step": 0.009999999776482582
+      },
+      "type": "Float",
+      "value": 0.0
+    }
+  },
+  "Shell": {
+    "Friction": {
+      "editor": {
+        "max": 1.0,
+        "min": 0.0,
+        "step": 0.009999999776482582
+      },
+      "type": "Float",
+      "value": 0.800000011920929
+    },
+    "Height": {
+      "editor": {
+        "max": 10.0,
+        "min": 0.10000000149011612,
+        "step": 0.05000000074505806
+      },
+      "type": "Float",
+      "value": 3.0
+    },
+    "InnerRadius": {
+      "editor": {
+        "max": 20.0,
+        "min": 0.10000000149011612,
+        "step": 0.05000000074505806
+      },
+      "type": "Float",
+      "value": 4.75
+    },
+    "OuterRadius": {
+      "editor": {
+        "max": 20.0,
+        "min": 0.10000000149011612,
+        "step": 0.05000000074505806
+      },
+      "type": "Float",
+      "value": 5.099999904632568
+    },
+    "Restitution": {
+      "editor": {
+        "max": 1.0,
+        "min": 0.0,
+        "step": 0.009999999776482582
+      },
+      "type": "Float",
+      "value": 0.0
+    }
+  },
+  "World": {
+    "BoundsMax": {
+      "editor": {
+        "step": 0.5
+      },
+      "type": "Vec3",
+      "value": {
+        "x": 10.0,
+        "y": 12.0,
+        "z": 10.0
+      }
+    },
+    "BoundsMin": {
+      "editor": {
+        "step": 0.5
+      },
+      "type": "Vec3",
+      "value": {
+        "x": -10.0,
+        "y": -5.0,
+        "z": -10.0
+      }
+    },
+    "Gravity": {
+      "editor": {
+        "step": 0.10000000149011612
+      },
+      "type": "Vec3",
+      "value": {
+        "x": 0.0,
+        "y": -9.800000190734863,
+        "z": 0.0
+      }
+    },
+    "LinearDamping": {
+      "editor": {
+        "max": 5.0,
+        "min": 0.0,
+        "step": 0.05000000074505806
+      },
+      "type": "Float",
+      "value": 0.0
+    },
+    "SolverIterationCount": {
+      "editor": {
+        "max": 32.0,
+        "min": 1.0,
+        "step": 1.0
+      },
+      "type": "Int32",
+      "value": 8
+    },
+    "SubstepCount": {
+      "editor": {
+        "max": 32.0,
+        "min": 1.0,
+        "step": 1.0
+      },
+      "type": "Int32",
+      "value": 8
+    }
+  }
+}

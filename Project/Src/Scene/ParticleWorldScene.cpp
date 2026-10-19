@@ -29,6 +29,12 @@ namespace {
 		.center = { 1.5f, 1.25f, 0.0f },
 		.radius = 1.25f,
 	};
+	constexpr Collision::SphericalCap kSphericalCap{
+		.apex = { 0.0f, 0.05f, 0.0f },
+		.axis = { 0.0f, 1.0f, 0.0f },
+		.baseRadius = 3.5f,
+		.height = 1.4f,
+	};
 
 	void DrawLine(const Vector3& start, const Vector3& end, const Vector4& color) {
 		Line3D(start, end).Draw(Math::Identity4x4(), color);
@@ -105,6 +111,13 @@ void ParticleWorldScene::Draw() const {
 	Sphere3D(kSphereObstacle.radius).Draw(
 		Math::MakeTranslateMatrix(kSphereObstacle.center),
 		Color::Turquoise);
+	SphericalCap3D(kSphericalCap.baseRadius, kSphericalCap.height).Draw(
+		Math::MakeTranslateMatrix(kSphericalCap.apex),
+		Material3D{
+			.color = Color::Silver,
+			.metallic = 0.85f,
+			.roughness = 0.3f,
+		});
 	DrawBounds(kWorldBounds, Color::Yellow);
 
 	std::vector<Physics::ParticleState> states;
@@ -129,7 +142,7 @@ void ParticleWorldScene::Draw() const {
 			ImVec4(1.0f, 1.0f, 0.0f, 1.0f),
 			"Yellow wire box: world bounds");
 		ImGui::TextWrapped(
-			"Particles collide with the AABB floor, AABB obstacle, Sphere obstacle, and each other.");
+			"Particles collide with the SphericalCap, AABB and Sphere obstacles, and each other.");
 		ImGui::TextWrapped(
 			"Particles are automatically removed after their center leaves the world bounds.");
 	}
@@ -143,8 +156,8 @@ void ParticleWorldScene::ResetSimulation() {
 
 	const Physics::StaticColliderOptions floorOptions{
 		.collisionParameter = {
-			.restitution = 0.15f,
-			.friction = 0.8f,
+			.restitution = 0.0f,
+			.friction = 1.0f,
 		},
 	};
 	const Physics::StaticColliderOptions obstacleOptions{
@@ -154,8 +167,7 @@ void ParticleWorldScene::ResetSimulation() {
 		},
 	};
 	particleWorld_.AddCollider(kFloor, floorOptions);
-	particleWorld_.AddCollider(kBoxObstacle, obstacleOptions);
-	particleWorld_.AddCollider(kSphereObstacle, obstacleOptions);
+	particleWorld_.AddCollider(kSphericalCap, floorOptions);
 
 	SpawnParticles();
 	SpawnParticles();
@@ -179,8 +191,8 @@ void ParticleWorldScene::SpawnParticles() {
 				},
 				.radius = kParticleRadius,
 				.collisionParameter = {
-					.restitution = 0.25f,
-					.friction = 0.35f,
+					.restitution = 0.0f,
+					.friction = 1.0f,
 				},
 				.userData = particleId,
 			});
