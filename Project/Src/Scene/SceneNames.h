@@ -4,6 +4,7 @@
 
 namespace SceneNames {
 
+	inline const std::string PhysicsWorld = "PhysicsWorld";
 	inline const std::string OBBCollision = "OBBCollision";
 	inline const std::string SphericalShellCap = "SphericalShellCap";
 	inline const std::string ParticleWorld = "ParticleWorld";
