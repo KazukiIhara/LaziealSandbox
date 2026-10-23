@@ -60,6 +60,8 @@ void TitleScene::Update() {
 		ChangeScene(SceneNames::GamepadTest);
 	} else if (Key::P.Trigger()) {
 		ChangeScene(SceneNames::PointLight);
+	} else if (Key::B.Trigger()) {
+		ChangeScene(SceneNames::OBBCollision);
 	} else if (Key::Enter.Trigger()) {
 		ChangeScene(SceneNames::Game);
 	}
