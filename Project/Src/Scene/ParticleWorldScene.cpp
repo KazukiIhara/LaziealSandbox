@@ -99,7 +99,7 @@ void ParticleWorldScene::Update() {
 	}
 
 	if (!isPaused_) {
-		particleWorld_.Step(static_cast<float>(System::DeltaTime()));
+		particleWorld_.Update(static_cast<float>(System::DeltaTime()));
 	}
 	UpdateCamera();
 }
