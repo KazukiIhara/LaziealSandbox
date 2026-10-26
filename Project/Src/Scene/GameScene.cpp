@@ -17,18 +17,18 @@ namespace {
 	constexpr Vector4 kStayColor{ 1.0f, 0.15f, 0.1f, 1.0f };
 	constexpr Vector4 kExitColor{ 1.0f, 0.0f, 0.75f, 1.0f };
 	constexpr Vector4 kStaticColor{ 0.55f, 0.65f, 0.75f, 1.0f };
-	constexpr Vector4 kTriggerColor{ 1.0f, 0.5f, 0.0f, 1.0f };
+	constexpr Vector4 kSphereTargetColor{ 1.0f, 0.5f, 0.0f, 1.0f };
 	constexpr Vector4 kDisabledColor{ 0.25f, 0.25f, 0.3f, 1.0f };
 
-	namespace Layers {
+	namespace Tags {
 
-		inline constexpr Collision::CollisionLayerMask SphereMover = 1u << 0u;
-		inline constexpr Collision::CollisionLayerMask SphereTarget = 1u << 1u;
-		inline constexpr Collision::CollisionLayerMask CapsuleBoxMover = 1u << 2u;
-		inline constexpr Collision::CollisionLayerMask CapsuleBoxTarget = 1u << 3u;
-		inline constexpr Collision::CollisionLayerMask CapsuleMover = 1u << 4u;
-		inline constexpr Collision::CollisionLayerMask CapsuleTarget = 1u << 5u;
-		inline constexpr Collision::CollisionLayerMask RayTarget = 1u << 6u;
+		inline constexpr char SphereMover[] = "SphereMover";
+		inline constexpr char SphereTarget[] = "SphereTarget";
+		inline constexpr char CapsuleBoxMover[] = "CapsuleBoxMover";
+		inline constexpr char CapsuleBoxTarget[] = "CapsuleBoxTarget";
+		inline constexpr char CapsuleMover[] = "CapsuleMover";
+		inline constexpr char CapsuleTarget[] = "CapsuleTarget";
+		inline constexpr char RayTarget[] = "RayTarget";
 
 	}
 
@@ -87,38 +87,18 @@ namespace {
 			color);
 	}
 
-	bool EventContains(
-		const Collision::CollisionEvent& event,
-		Collision::ColliderHandle handle) {
-		return event.first == handle || event.second == handle;
-	}
-
-	std::optional<Collision::CollisionPhase> GetPhase(
-		const Collision::ColliderWorld& world,
-		Collision::ColliderHandle handle) {
-		for (const Collision::CollisionEvent& event : world.GetEvents()) {
-			if (EventContains(event, handle)) {
-				return event.phase;
-			}
-		}
-		return std::nullopt;
-	}
-
 	Vector4 GetEventColor(
 		const Collision::ColliderWorld& world,
 		Collision::ColliderHandle handle,
 		const Vector4& idleColor) {
-		const std::optional<Collision::CollisionPhase> phase = GetPhase(world, handle);
-		if (!phase) {
-			return world.IsColliding(handle) ? kStayColor : idleColor;
-		}
-
-		switch (*phase) {
-		case Collision::CollisionPhase::Enter:
+		const Collision::ColliderEvents events = world.GetEvents(handle);
+		if (!events.enter.empty()) {
 			return kEnterColor;
-		case Collision::CollisionPhase::Stay:
+		}
+		if (!events.stay.empty()) {
 			return kStayColor;
-		case Collision::CollisionPhase::Exit:
+		}
+		if (!events.exit.empty()) {
 			return kExitColor;
 		}
 		return idleColor;
@@ -128,31 +108,34 @@ namespace {
 		const Collision::ColliderWorld& world,
 		Collision::ColliderHandle handle,
 		const Vector4& idleColor) {
-		const Collision::ColliderShape* shape = world.GetShape(handle);
-		if (!shape) {
+		const std::optional<Collision::ColliderState> collider =
+			world.GetCollider(handle);
+		if (!collider) {
 			return;
 		}
 
 		const Vector4 color = GetEventColor(world, handle, idleColor);
 		std::visit([&](const auto& colliderShape) {
 			DrawShape(colliderShape, color);
-		}, *shape);
+		}, collider->shape);
 	}
 
-	void DrawContacts(const Collision::ColliderWorld& world) {
-		for (const Collision::CollisionEvent& event : world.GetEvents()) {
-			if (event.phase == Collision::CollisionPhase::Exit) {
-				continue;
+	void DrawContacts(
+		const Collision::ColliderWorld& world,
+		Collision::ColliderHandle handle) {
+		const Collision::ColliderEvents events = world.GetEvents(handle);
+		for (const std::span<const Collision::ColliderCollision> collisions : {
+			events.enter, events.stay }) {
+			for (const Collision::ColliderCollision& collision : collisions) {
+				Sphere3D(0.12f).Draw(
+					Math::MakeTranslateMatrix(collision.contact.point),
+					Color::Yellow);
+				Line3D(
+					collision.contact.point,
+					collision.contact.point + collision.contact.normal * 1.25f).Draw(
+						Math::Identity4x4(),
+						Color::Cyan);
 			}
-
-			Sphere3D(0.12f).Draw(
-				Math::MakeTranslateMatrix(event.contact.point),
-				event.isTrigger ? Color::Orange : Color::Yellow);
-			Line3D(
-				event.contact.point,
-				event.contact.point + event.contact.normal * 1.25f).Draw(
-					Math::Identity4x4(),
-					Color::Cyan);
 		}
 	}
 
@@ -183,41 +166,39 @@ namespace {
 
 GameScene::GameScene(const InitData& init) :
 	SampleScene(init) {
+	world_.RegisterTags({
+		Tags::SphereMover,
+		Tags::SphereTarget,
+		Tags::CapsuleBoxMover,
+		Tags::CapsuleBoxTarget,
+		Tags::CapsuleMover,
+		Tags::CapsuleTarget,
+		Tags::RayTarget,
+	});
+
 	movableSphere_ = world_.Add(movableSphereBase_, {
-		.layer = Layers::SphereMover,
-		.mask = Layers::SphereTarget,
-		.userData = 1u,
+		.tag = Tags::SphereMover,
+		.targetTags = { Tags::SphereTarget },
 	});
 	sphereTarget_ = world_.Add(sphereTargetShape_, {
-		.layer = Layers::SphereTarget,
-		.mask = Layers::SphereMover,
-		.isTrigger = true,
-		.userData = 2u,
+		.tag = Tags::SphereTarget,
 	});
 	movableCapsuleBox_ = world_.Add(movableCapsuleBoxBase_, {
-		.layer = Layers::CapsuleBoxMover,
-		.mask = Layers::CapsuleBoxTarget,
-		.userData = 3u,
+		.tag = Tags::CapsuleBoxMover,
+		.targetTags = { Tags::CapsuleBoxTarget },
 	});
 	capsuleBoxTarget_ = world_.Add(capsuleBoxTargetShape_, {
-		.layer = Layers::CapsuleBoxTarget,
-		.mask = Layers::CapsuleBoxMover,
-		.userData = 4u,
+		.tag = Tags::CapsuleBoxTarget,
 	});
 	movableCapsule_ = world_.Add(movableCapsuleBase_, {
-		.layer = Layers::CapsuleMover,
-		.mask = Layers::CapsuleTarget,
-		.userData = 5u,
+		.tag = Tags::CapsuleMover,
+		.targetTags = { Tags::CapsuleTarget },
 	});
 	capsuleTarget_ = world_.Add(capsuleTargetShape_, {
-		.layer = Layers::CapsuleTarget,
-		.mask = Layers::CapsuleMover,
-		.userData = 6u,
+		.tag = Tags::CapsuleTarget,
 	});
 	rayTarget_ = world_.Add(rayTargetShape_, {
-		.layer = Layers::RayTarget,
-		.mask = 0u,
-		.userData = 7u,
+		.tag = Tags::RayTarget,
 	});
 }
 
@@ -239,8 +220,8 @@ void GameScene::Update() {
 		movementOffset_ = {};
 	}
 	if (Key::T.Trigger()) {
-		triggerEnabled_ = !triggerEnabled_;
-		world_.SetEnabled(sphereTarget_, triggerEnabled_);
+		sphereTargetEnabled_ = !sphereTargetEnabled_;
+		world_.SetEnabled(sphereTarget_, sphereTargetEnabled_);
 	}
 
 	world_.SetShape(movableSphere_, Translate(movableSphereBase_, movementOffset_));
@@ -252,15 +233,15 @@ void GameScene::Update() {
 		Translate(movableCapsuleBase_, movementOffset_));
 	world_.Step();
 
-	for (const Collision::CollisionEvent& event : world_.GetEvents()) {
-		if (event.phase == Collision::CollisionPhase::Enter) {
-			++GetData().collisionCount;
-		}
+	for (const Collision::ColliderHandle handle : {
+		movableSphere_, movableCapsuleBox_, movableCapsule_ }) {
+		GetData().collisionCount += static_cast<int32_t>(
+			world_.GetEvents(handle).enter.size());
 	}
 
 	ray_ = rayBase_;
 	ray_.origin += movementOffset_;
-	rayHit_ = world_.RaycastClosest(ray_, kRayLength, Layers::RayTarget);
+	rayHit_ = world_.RaycastClosest(ray_, kRayLength, { Tags::RayTarget });
 	UpdateCamera();
 
 	if (Key::Enter.Trigger()) {
@@ -274,12 +255,14 @@ void GameScene::Draw() const {
 	DrawCollider(
 		world_,
 		sphereTarget_,
-		triggerEnabled_ ? kTriggerColor : kDisabledColor);
+		sphereTargetEnabled_ ? kSphereTargetColor : kDisabledColor);
 	DrawCollider(world_, movableCapsuleBox_, kIdleColor);
 	DrawCollider(world_, capsuleBoxTarget_, kStaticColor);
 	DrawCollider(world_, movableCapsule_, kIdleColor);
 	DrawCollider(world_, capsuleTarget_, kStaticColor);
 	DrawCollider(world_, rayTarget_, rayHit_ ? kStayColor : kStaticColor);
-	DrawContacts(world_);
+	DrawContacts(world_, movableSphere_);
+	DrawContacts(world_, movableCapsuleBox_);
+	DrawContacts(world_, movableCapsule_);
 	DrawRay(ray_, rayHit_);
 }

@@ -61,5 +61,5 @@ private:
 	LGF::Vector3 movementOffset_{};
 	LGF::Collision::Ray ray_ = rayBase_;
 	std::optional<LGF::Collision::WorldRaycastHit> rayHit_;
-	bool triggerEnabled_ = true;
+	bool sphereTargetEnabled_ = true;
 };

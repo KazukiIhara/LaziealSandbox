@@ -62,6 +62,8 @@ void TitleScene::Update() {
 		ChangeScene(SceneNames::PointLight);
 	} else if (Key::W.Trigger()) {
 		ChangeScene(SceneNames::PhysicsWorld);
+	} else if (Key::C.Trigger()) {
+		ChangeScene(SceneNames::ColliderWorld);
 	} else if (Key::B.Trigger()) {
 		ChangeScene(SceneNames::OBBCollision);
 	} else if (Key::Enter.Trigger()) {

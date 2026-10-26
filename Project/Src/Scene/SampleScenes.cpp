@@ -1,5 +1,6 @@
 #include "Scene/SampleScenes.h"
 
+#include "Scene/ColliderWorldScene.h"
 #include "Scene/GameScene.h"
 #include "Scene/GamepadTestScene.h"
 #include "Scene/OBBCollisionScene.h"
@@ -14,6 +15,7 @@
 void RegisterSampleScenes(SampleApp& sceneManager) {
 	sceneManager
 		.Register<PhysicsWorldScene>(SceneNames::PhysicsWorld)
+		.Register<ColliderWorldScene>(SceneNames::ColliderWorld)
 		.Register<OBBCollisionScene>(SceneNames::OBBCollision)
 		.Register<SphericalShellCapScene>(SceneNames::SphericalShellCap)
 		.Register<ParticleWorldScene>(SceneNames::ParticleWorld)
