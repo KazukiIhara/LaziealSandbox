@@ -14,6 +14,8 @@ private:
 
 	LGF::Physics::PhysicsWorld physicsWorld_;
 	LGF::Physics::StaticObjectHandle floorHandle_{};
+	LGF::Physics::StaticObjectHandle wallHandle_{};
+	LGF::Physics::StaticObjectHandle pillarHandle_{};
 	LGF::Physics::DynamicObjectHandle sphereHandle_{};
 	bool isPaused_ = false;
 };

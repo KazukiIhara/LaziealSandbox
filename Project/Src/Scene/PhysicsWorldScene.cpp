@@ -8,6 +8,8 @@ using namespace LGF;
 
 namespace {
 
+	constexpr float kMoveSpeed = 4.0f;
+
 	constexpr Collision::AABB kWorldBounds{
 		.min = { -8.0f, -4.0f, -8.0f },
 		.max = { 8.0f, 12.0f, 8.0f },
@@ -23,6 +25,18 @@ namespace {
 				box.rotation,
 				box.center),
 			color);
+	}
+
+	void DrawStaticObject(
+		const Physics::PhysicsWorld& world,
+		Physics::StaticObjectHandle handle,
+		const Vector4& color) {
+		const std::optional<Physics::StaticObjectState> state =
+			world.GetState(handle);
+		if (!state) {
+			return;
+		}
+		DrawOBB(std::get<Collision::OBB>(state->shape), color);
 	}
 
 }
@@ -50,6 +64,27 @@ void PhysicsWorldScene::Update() {
 	}
 
 	if (!isPaused_) {
+		const std::optional<Physics::DynamicObjectState> sphereState =
+			physicsWorld_.GetState(sphereHandle_);
+		if (sphereState) {
+			Vector3 movement{
+				static_cast<float>(Key::D.Press()) -
+					static_cast<float>(Key::A.Press()),
+				0.0f,
+				static_cast<float>(Key::W.Press()) -
+					static_cast<float>(Key::S.Press()),
+			};
+			if (Math::LengthSq(movement) > 1.0f) {
+				movement = Math::Normalize(movement);
+			}
+
+			// 水平方向だけを操作し、重力で変化するY速度はそのまま残す。
+			physicsWorld_.SetVelocity(sphereHandle_, {
+				movement.x * kMoveSpeed,
+				sphereState->velocity.y,
+				movement.z * kMoveSpeed,
+			});
+		}
 		physicsWorld_.Update(static_cast<float>(System::DeltaTime()));
 	}
 	UpdateCamera();
@@ -58,13 +93,9 @@ void PhysicsWorldScene::Update() {
 void PhysicsWorldScene::Draw() const {
 	DrawStage();
 
-	const std::optional<Physics::StaticObjectState> floorState =
-		physicsWorld_.GetState(floorHandle_);
-	if (floorState) {
-		DrawOBB(
-			std::get<Collision::OBB>(floorState->shape),
-			Color::DarkGray);
-	}
+	DrawStaticObject(physicsWorld_, floorHandle_, Color::DarkGray);
+	DrawStaticObject(physicsWorld_, wallHandle_, Color::RoyalBlue);
+	DrawStaticObject(physicsWorld_, pillarHandle_, Color::Turquoise);
 
 	const std::optional<Physics::DynamicObjectState> sphereState =
 		physicsWorld_.GetState(sphereHandle_);
@@ -103,10 +134,11 @@ void PhysicsWorldScene::Draw() const {
 		}
 
 		ImGui::Separator();
+		ImGui::TextUnformatted("WASD: move Sphere");
 		ImGui::TextUnformatted("Space: pause | R: reset | Escape: title");
 		ImGui::TextWrapped(
-			"Current scope: Static OBB and Dynamic Sphere. "
-			"The sphere is pushed out without restitution or friction.");
+			"Floor, wall and pillar are Static OBBs. "
+			"Move the Dynamic Sphere into them to check penetration resolution.");
 	}
 	ImGui::End();
 }
@@ -117,14 +149,25 @@ void PhysicsWorldScene::ResetSimulation() {
 
 	const Collision::OBB floor{
 		.center = { 0.0f, 0.5f, 0.0f },
-		.halfExtents = { 4.0f, 0.5f, 3.0f },
-		.rotation = Math::MakeQuaternion({ 0.0f, 0.3f, 0.0f }),
+		.halfExtents = { 6.0f, 0.5f, 6.0f },
+	};
+	const Collision::OBB wall{
+		.center = { 0.0f, 2.5f, 3.0f },
+		.halfExtents = { 3.0f, 1.5f, 0.25f },
+		.rotation = Math::MakeQuaternion({ 0.0f, -0.15f, 0.0f }),
+	};
+	const Collision::OBB pillar{
+		.center = { 2.0f, 2.0f, -0.5f },
+		.halfExtents = { 0.65f, 1.0f, 0.65f },
+		.rotation = Math::MakeQuaternion({ 0.0f, 0.4f, 0.0f }),
 	};
 	const Collision::Sphere sphere{
-		.center = { 0.0f, 5.0f, 0.0f },
+		.center = { 0.0f, 3.0f, -4.0f },
 		.radius = 0.5f,
 	};
 
 	floorHandle_ = physicsWorld_.AddStaticObject(floor);
+	wallHandle_ = physicsWorld_.AddStaticObject(wall);
+	pillarHandle_ = physicsWorld_.AddStaticObject(pillar);
 	sphereHandle_ = physicsWorld_.AddDynamicObject(sphere);
 }
