@@ -60,6 +60,8 @@ void TitleScene::Update() {
 		ChangeScene(SceneNames::GamepadTest);
 	} else if (Key::P.Trigger()) {
 		ChangeScene(SceneNames::PointLight);
+	} else if (Key::S.Trigger()) {
+		ChangeScene(SceneNames::PhysicsShowcase);
 	} else if (Key::W.Trigger()) {
 		ChangeScene(SceneNames::PhysicsWorld);
 	} else if (Key::C.Trigger()) {

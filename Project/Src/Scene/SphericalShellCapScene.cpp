@@ -19,7 +19,7 @@ namespace {
 SphericalShellCapScene::SphericalShellCapScene(const InitData& init) :
 	SampleScene(init),
 	parameters_(LoadParameters()),
-	particleWorld_(MakeWorldSettings(parameters_)),
+	physicsWorld_(MakeWorldSettings(parameters_)),
 	parameterStatus_("Loaded Assets/Parameters/SphericalShellCapDemo.json") {
 	ResetSimulation();
 }
@@ -63,9 +63,9 @@ void SphericalShellCapScene::Update() {
 		shellPosition_.z = std::sin(automaticMoveTime_ * 1.35f) * 1.3f;
 	}
 
-	particleWorld_.SetColliderShape(shellCollider_, MakeShell());
+	physicsWorld_.SetKinematicObjectShape(shellObject_, MakeShell());
 	if (!isPaused_) {
-		particleWorld_.Update(static_cast<float>(System::DeltaTime()));
+		physicsWorld_.Update(static_cast<float>(System::DeltaTime()));
 	}
 	UpdateCamera();
 }
@@ -84,24 +84,24 @@ void SphericalShellCapScene::Draw() const {
 			.roughness = 0.28f,
 		});
 
-	std::vector<Physics::ParticleState> states;
-	particleWorld_.GetStates(states);
-	for (const Physics::ParticleState& state : states) {
-		const Vector4 color = state.userData % 3u == 0u
+	std::vector<Physics::PhysicsParticleState> states;
+	physicsWorld_.GetParticleStates(states);
+	for (const Physics::PhysicsParticleState& state : states) {
+		const Vector4 color = state.handle.index % 3u == 0u
 			? Color::Gold
-			: state.userData % 3u == 1u ? Color::Orange : Color::Yellow;
+			: state.handle.index % 3u == 1u ? Color::Orange : Color::Yellow;
 		Sphere3D(state.radius).Draw(Math::MakeTranslateMatrix(state.position), color);
 	}
 
 	const std::size_t removedParticleCount =
-		spawnedParticleCount_ - particleWorld_.GetParticleCount();
+		spawnedParticleCount_ - physicsWorld_.GetParticleCount();
 	const std::size_t outsideCavityCount = CountParticlesOutsideCavity();
-	const Physics::ParticleWorldStepStatistics& statistics =
-		particleWorld_.GetLastStepStatistics();
+	const Physics::PhysicsParticleStepStatistics& statistics =
+		physicsWorld_.GetLastParticleStepStatistics();
 
 	ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin("SphericalShellCap Demo")) {
-		ImGui::Text("Particles: %zu", particleWorld_.GetParticleCount());
+		ImGui::Text("Particles: %zu", physicsWorld_.GetParticleCount());
 		ImGui::Text("Outside cavity below rim: %zu", outsideCavityCount);
 		ImGui::Text("Removed outside world bounds: %zu", removedParticleCount);
 		ImGui::Text(
@@ -247,8 +247,7 @@ SphericalShellCapScene::DemoParameters SphericalShellCapScene::LoadParameters() 
 	return result;
 }
 
-Physics::ParticleWorldSettings SphericalShellCapScene::MakeWorldSettings(
-	const DemoParameters& parameters) {
+Physics::PhysicsWorldSettings SphericalShellCapScene::MakeWorldSettings(const DemoParameters& parameters) {
 	return {
 		.gravity = parameters.gravity,
 		.worldBounds = parameters.worldBounds,
@@ -270,7 +269,7 @@ void SphericalShellCapScene::ReloadParameters() {
 	}
 
 	parameters_ = LoadParameters();
-	particleWorld_.SetSettings(MakeWorldSettings(parameters_));
+	physicsWorld_.SetSettings(MakeWorldSettings(parameters_));
 	parameterStatus_ = "Reloaded Assets/Parameters/SphericalShellCapDemo.json";
 	ResetSimulation();
 }
@@ -286,7 +285,7 @@ Collision::SphericalShellCap SphericalShellCapScene::MakeShell() const {
 }
 
 void SphericalShellCapScene::ResetSimulation() {
-	particleWorld_.Clear();
+	physicsWorld_.Clear();
 	shellPosition_ = { 0.0f, 0.05f, 0.0f };
 	nextParticleId_ = 0u;
 	spawnedParticleCount_ = 0u;
@@ -294,10 +293,10 @@ void SphericalShellCapScene::ResetSimulation() {
 	isPaused_ = false;
 	automaticMove_ = false;
 
-	shellCollider_ = particleWorld_.AddCollider(
+	shellObject_ = physicsWorld_.AddKinematicObject(
 		MakeShell(),
 		{
-			.collisionParameter = {
+			.material = {
 				.restitution = parameters_.shellRestitution,
 				.friction = parameters_.shellFriction,
 			},
@@ -311,7 +310,7 @@ void SphericalShellCapScene::SpawnParticles() {
 	for (uint32_t z = 0u; z < columnCount; ++z) {
 		for (uint32_t x = 0u; x < columnCount; ++x) {
 			const uint64_t particleId = nextParticleId_++;
-			const Physics::ParticleHandle handle = particleWorld_.Add({
+			const Physics::PhysicsParticleHandle handle = physicsWorld_.AddParticle({
 				.position = {
 					(static_cast<float>(x) - 2.0f) * 0.48f,
 					3.2f + static_cast<float>((particleId / 25u) % 5u) * 0.5f,
@@ -320,11 +319,10 @@ void SphericalShellCapScene::SpawnParticles() {
 				.velocity = {},
 				.radius = parameters_.particleRadius,
 				.mass = parameters_.particleMass,
-				.collisionParameter = {
+				.material = {
 					.restitution = parameters_.particleRestitution,
 					.friction = parameters_.particleFriction,
 				},
-				.userData = particleId,
 			});
 			if (handle.IsValid()) {
 				++spawnedParticleCount_;
@@ -337,12 +335,12 @@ std::size_t SphericalShellCapScene::CountParticlesOutsideCavity() const {
 	const Collision::SphericalShellCap shell = MakeShell();
 	const Vector3 sphereCenter = shell.outerApex + shell.axis * shell.outerRadius;
 	const float openingHeight = shell.outerApex.y + shell.height;
-	std::vector<Physics::ParticleState> states;
-	particleWorld_.GetStates(states);
+	std::vector<Physics::PhysicsParticleState> states;
+	physicsWorld_.GetParticleStates(states);
 
 	return static_cast<std::size_t>(std::ranges::count_if(
 		states,
-		[&](const Physics::ParticleState& state) {
+		[&](const Physics::PhysicsParticleState& state) {
 			if (state.position.y >= openingHeight + state.radius) {
 				return false;
 			}
@@ -351,3 +349,5 @@ std::size_t SphericalShellCapScene::CountParticlesOutsideCavity() const {
 				safeCavityRadius * safeCavityRadius;
 		}));
 }
+
+

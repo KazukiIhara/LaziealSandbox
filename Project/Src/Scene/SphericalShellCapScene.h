@@ -38,8 +38,7 @@ private:
 	};
 
 	static DemoParameters LoadParameters();
-	static LGF::Physics::ParticleWorldSettings MakeWorldSettings(
-		const DemoParameters& parameters);
+	static LGF::Physics::PhysicsWorldSettings MakeWorldSettings(const DemoParameters& parameters);
 	void ReloadParameters();
 	LGF::Collision::SphericalShellCap MakeShell() const;
 	void ResetSimulation();
@@ -47,8 +46,8 @@ private:
 	std::size_t CountParticlesOutsideCavity() const;
 
 	DemoParameters parameters_;
-	LGF::Physics::ParticleWorld particleWorld_;
-	LGF::Physics::StaticColliderHandle shellCollider_;
+	LGF::Physics::PhysicsWorld physicsWorld_;
+	LGF::Physics::KinematicObjectHandle shellObject_;
 	LGF::Vector3 shellPosition_{};
 	uint64_t nextParticleId_ = 0u;
 	std::size_t spawnedParticleCount_ = 0u;
@@ -57,3 +56,5 @@ private:
 	bool isPaused_ = false;
 	bool automaticMove_ = false;
 };
+
+

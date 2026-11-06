@@ -4,7 +4,8 @@
 #include "Scene/GameScene.h"
 #include "Scene/GamepadTestScene.h"
 #include "Scene/OBBCollisionScene.h"
-#include "Scene/ParticleWorldScene.h"
+#include "Scene/PhysicsParticleScene.h"
+#include "Scene/PhysicsShowcaseScene.h"
 #include "Scene/PhysicsWorldScene.h"
 #include "Scene/PointLightScene.h"
 #include "Scene/ResultScene.h"
@@ -14,14 +15,16 @@
 
 void RegisterSampleScenes(SampleApp& sceneManager) {
 	sceneManager
+		.Register<PhysicsShowcaseScene>(SceneNames::PhysicsShowcase)
 		.Register<PhysicsWorldScene>(SceneNames::PhysicsWorld)
 		.Register<ColliderWorldScene>(SceneNames::ColliderWorld)
 		.Register<OBBCollisionScene>(SceneNames::OBBCollision)
 		.Register<SphericalShellCapScene>(SceneNames::SphericalShellCap)
-		.Register<ParticleWorldScene>(SceneNames::ParticleWorld)
+		.Register<PhysicsParticleScene>(SceneNames::PhysicsParticle)
 		.Register<GamepadTestScene>(SceneNames::GamepadTest)
 		.Register<PointLightScene>(SceneNames::PointLight)
 		.Register<TitleScene>(SceneNames::Title)
 		.Register<GameScene>(SceneNames::Game)
 		.Register<ResultScene>(SceneNames::Result);
 }
+
