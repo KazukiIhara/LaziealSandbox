@@ -35,12 +35,45 @@ RuntimeとGraphicsのプロジェクトもソリューションから参照さ�
 自動更新時はコメント、未知の項目、独自の並び順は保持されません。
 
 - `[Runtime] assetRoot`: 初期化時に使用するアセットルート
+- `[Audio] enabled`: 音声機能を初期化するか
+- `[Audio] masterVolume`: 全音声へ適用するマスター音量（0.0～1.0）
 - `[Window] title`: UTF-8形式のウィンドウタイトル
 - `[Window] width`, `height`: 起動時のクライアント領域サイズ
 - `[Window] fullscreen`: フルスクリーンで起動するか
 
 実行中のタイトル、ウィンドウサイズ、フルスクリーン状態は`LGF::Window`から変更できます。
 アセットルートは初期化後に変更できません。
+
+## 音声再生
+
+`LGF::Audio`はWAV、MP3形式の音声を読み込みます。
+相対パスは`RuntimeSetting.ini`の`assetRoot`を基準に解決されます。
+
+```cpp
+LGF::Audio bgm{ "Audio/Bgm.mp3" };
+bgm.SetLoop(true);
+bgm.SetVolume(0.5f);
+bgm.Play();
+```
+
+`Play`、`Pause`、`Stop`で再生状態を制御でき、`GetDuration`と
+`GetPosition`は秒単位の値を返します。同じ`Audio`をコピーした場合は、
+読み込んだ音声と再生状態を共有します。
+
+インスタンスを保持せず、ファイルパスを指定する静的関数だけで操作することもできます。
+
+```cpp
+LGF::Audio::Load("Audio/Bgm.mp3");
+LGF::Audio::SetVolume("Audio/Bgm.mp3", 0.5f);
+LGF::Audio::Play("Audio/Bgm.mp3", true); // trueを指定するとループ再生
+
+LGF::Audio::Stop("Audio/Bgm.mp3");
+LGF::Audio::Unload("Audio/Bgm.mp3");
+```
+
+静的関数で読み込んだ音声は、`Unload`、`UnloadAll`、またはフレームワークの
+終了までAudioSystemが保持します。同じパスで再度`Load`すると、読み込み成功後に
+以前の音声を置き換えます。
 
 ## JSONパラメータ
 
