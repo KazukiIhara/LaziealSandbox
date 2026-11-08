@@ -60,21 +60,6 @@ bgm.Play();
 `GetPosition`は秒単位の値を返します。同じ`Audio`をコピーした場合は、
 読み込んだ音声と再生状態を共有します。
 
-インスタンスを保持せず、ファイルパスを指定する静的関数だけで操作することもできます。
-
-```cpp
-LGF::Audio::Load("Audio/Bgm.mp3");
-LGF::Audio::SetVolume("Audio/Bgm.mp3", 0.5f);
-LGF::Audio::Play("Audio/Bgm.mp3", true); // trueを指定するとループ再生
-
-LGF::Audio::Stop("Audio/Bgm.mp3");
-LGF::Audio::Unload("Audio/Bgm.mp3");
-```
-
-静的関数で読み込んだ音声は、`Unload`、`UnloadAll`、またはフレームワークの
-終了までAudioSystemが保持します。同じパスで再度`Load`すると、読み込み成功後に
-以前の音声を置き換えます。
-
 ## JSONパラメータ
 
 `LGF::Parameter`を使うと、`Assets/Parameters`内のJSONから型付きの値を
