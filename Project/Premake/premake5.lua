@@ -101,6 +101,7 @@ project "LaziealSandbox"
     filter "configurations:Debug"
         defines { "DEBUG" }
         symbols "On"
+        debugformat "C7"
         fatalwarnings { "All" }
         runtime "Debug"
         linkoptions { "/IGNORE:4049", "/IGNORE:4099" }
@@ -110,6 +111,7 @@ project "LaziealSandbox"
     filter "configurations:Develop"
         defines { "DEBUG", "DEVELOP" }
         symbols "On"
+        debugformat "C7"
         optimize "Debug"
         runtime "Release"
         linkoptions { "/IGNORE:4049", "/IGNORE:4099" }

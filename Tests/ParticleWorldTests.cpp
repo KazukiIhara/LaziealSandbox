@@ -44,6 +44,8 @@ int main() {
 		world.Update(0.0f);
 		Require(world.GetParticleCount() == 3u, "Particle capacity");
 		Require(world.GetLastStepStatistics().rejectedCount == 7u, "Rejected particle statistics");
+		Require(world.GetLastStepStatistics().isAvailable &&
+			world.GetLastStepStatistics().latencyFrames == 0u, "CPU statistics are immediate");
 		world.Update(1.0f);
 		Require(world.GetParticleCount() == 0u, "Lifetime cleanup");
 		Require(world.GetLastStepStatistics().expiredCount == 3u, "Expired statistics");

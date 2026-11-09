@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+    <!--
+      x64ターゲットのビルドでは、コンパイラとリンカーも64-bitホスト版へ統一する。
+      32-bitホスト版とVisual Studio 18のPDB DLLが混在して発生するC1902/LNK1101を回避する。
+    -->
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+</Project>

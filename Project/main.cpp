@@ -4,7 +4,8 @@
 using namespace LGF;
 
 void Main() {
-	VFX::ParticleWorld world{ VFX::LoadParticleWorldSettings("Assets/Parameters/ParticleWorld.json") };
+	// CPU版と同じJSONをそのままGPU版へ渡せることを試作の確認条件にする。
+	VFX::GpuParticleWorld world{ VFX::LoadParticleWorldSettings("Assets/Parameters/ParticleWorld.json") };
 	const auto emitter = world.CreateEmitter(VFX::LoadParticleEmitterDesc("Assets/Parameters/ParticleEmitter.json"));
 	Camera3D camera{ { 0.0f, 2.0f, -8.0f } };
 	bool continuous = true;
