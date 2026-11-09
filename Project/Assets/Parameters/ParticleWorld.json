@@ -1,0 +1,12 @@
+{
+  "WorldBounds": {
+    "Min": { "type": "Vector3", "value": { "x": -5.0, "y": -3.0, "z": -5.0 } },
+    "Max": { "type": "Vector3", "value": { "x": 5.0, "y": 6.0, "z": 5.0 } }
+  },
+  "MaximumParticleCount": { "type": "Int32", "value": 10000 },
+  "MaximumEmitterCount": { "type": "Int32", "value": 256 },
+  "BoundsPadding": { "type": "Float", "value": 0.2 },
+  "RemoveOutOfBounds": { "type": "Bool", "value": true },
+  "MaximumDeltaTime": { "type": "Float", "value": 0.06666667 },
+  "RandomSeed": { "type": "Int32", "value": 1 }
+}
