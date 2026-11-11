@@ -60,6 +60,45 @@ bgm.Play();
 `GetPosition`は秒単位の値を返します。同じ`Audio`をコピーした場合は、
 読み込んだ音声と再生状態を共有します。
 
+## フォントとテキスト描画
+
+`LGF::Font2D`はフォントファイルとピクセルサイズを指定して読み込み、
+UTF-8文字列を2D描画します。同じパスとサイズのフォントは内部リソースを共有します。
+
+```cpp
+LGF::Font2D font{ "Assets/Fonts/NotoSansJP/NotoSansJP-wght.ttf", 32u };
+font.Draw("スコア: 100", { 32.0f, 32.0f }, {
+    .color = LGF::Color::White,
+    .anchor = { 0.0f, 0.0f },
+});
+
+const LGF::Vector2 textSize = font.Measure("スコア: 100");
+```
+
+初めて使用する文字はグリフアトラスへ追加され、以降の描画で再利用されます。
+`Draw`と`Measure`は改行、タブ、カーニングに対応します。
+`anchor`は`{ 0.0f, 0.0f }`が左上、`{ 0.5f, 0.5f }`が中央、
+`{ 1.0f, 1.0f }`が右下を表し、Font2DとFont3Dで共通です。
+
+`LGF::Font3D`は同じフォントリソースを使用して、3D空間へ文字列を描画します。
+既定では常にカメラを向くBillboard表示になります。
+
+```cpp
+LGF::Font3D font{ "Assets/Fonts/NotoSansJP/NotoSansJP-wght.ttf", 64u };
+font.Draw("Billboard Text", { 0.0f, 2.0f, 0.0f });
+
+font.Draw("World Text", { 0.0f, 1.0f, 0.0f }, {
+    .color = LGF::Color::Gold,
+    .anchor = { 0.5f, 0.5f },
+    .worldUnitsPerPixel = 0.01f,
+    .mode = LGF::Font3DMode::World,
+    .rotation = LGF::Math::MakeQuaternion({ 0.0f, 0.5f, 0.0f }),
+});
+```
+
+`Font3D::Measure`はグリフのピクセル単位で領域を返します。
+ワールド上の大きさは戻り値へ`worldUnitsPerPixel`を掛けて取得できます。
+
 ## JSONパラメータ
 
 `LGF::Parameter`を使うと、`Assets/Parameters`内のJSONから型付きの値を
