@@ -8,6 +8,23 @@ void Main() {
 	const Font2D bodyFont{ kFontPath, 28u };
 	const Font2D captionFont{ kFontPath, 20u };
 	const Font3D worldFont{ kFontPath, 64u };
+	using Vector3Animation = SimpleAnimation<Vector3>;
+	using ColorAnimation = SimpleAnimation<Vector4>;
+	const Vector3Animation billboardPositionAnimation{
+		{ -4.0f, 1.8f, 2.0f },
+		{ -4.0f, 2.6f, 2.0f },
+		EasingType::EaseInOutSine,
+		true,
+		Vector3Animation::LoopType::PingPong,
+	};
+	const ColorAnimation titleColorAnimation{
+		Color::AliceBlue,
+		Color::HotPink,
+		EasingType::EaseInOutSine,
+		true,
+		ColorAnimation::LoopType::PingPong,
+	};
+	float animationTime = 0.0f;
 
 	Camera3D camera{ { 0.0f, 1.5f, -8.0f } };
 	const Grid3D grid{ 12.0f, 1.0f };
@@ -26,11 +43,13 @@ void Main() {
 	};
 
 	while (System::Update()) {
+		animationTime += static_cast<float>(System::DeltaTime()) * 0.5f;
+
 		camera.SetScene();
 		grid.Draw();
 		worldFont.Draw(
 			"Billboard Font3D / 常にカメラを向く",
-			{ -4.0f, 2.2f, 2.0f },
+			billboardPositionAnimation.GetValue(animationTime),
 			billboardOptions);
 		worldFont.Draw(
 			"World Font3D / 空間に固定",
@@ -43,7 +62,7 @@ void Main() {
 		titleFont.Draw(
 			"Font2D + Font3D Demo",
 			{ 48.0f, 42.0f },
-			{ .color = Color::AliceBlue });
+			{ .color = titleColorAnimation.GetValue(animationTime) });
 
 		bodyFont.Draw(
 			"2Dテキストは画面上、3Dテキストはワールド上に描画",
@@ -51,7 +70,7 @@ void Main() {
 			{ .color = Color::White });
 
 		captionFont.Draw(
-			"Billboard: カメラ追従 / World: Quaternionで向きを固定",
+			"SimpleAnimation: 色と位置をPingPong補間",
 			{ 48.0f, 154.0f },
 			{ .color = Color::LightGray });
 	}
