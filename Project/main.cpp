@@ -6,6 +6,7 @@
 #include <functional>
 #include <string>
 #include <utility>
+#include <vector>
 
 using namespace LGF;
 
@@ -69,38 +70,13 @@ void Main() {
 	uint32_t triggerCount = 0u;
 	uint32_t holdCount = 0u;
 	uint32_t releaseCount = 0u;
-
-	const auto makeCallbacks = [
-		&triggerMessage,
-		&holdMessage,
-		&releaseMessage,
-		&triggerCount,
-		&holdCount,
-		&releaseCount](const std::string& text) {
-		return UIButtonCallbacks{
-			.onTrigger = [&, text] {
-				++triggerCount;
-				triggerMessage = "Trigger: " + text +
-					" (" + std::to_string(triggerCount) + ")";
-			},
-			.onHold = [&, text] {
-				++holdCount;
-				holdMessage = "Hold: " + text +
-					" (" + std::to_string(holdCount) + ")";
-			},
-			.onRelease = [&, text] {
-				++releaseCount;
-				releaseMessage = "Release: " + text +
-					" (" + std::to_string(releaseCount) + ")";
-			},
-		};
-	};
+	std::vector<std::pair<UIButtonHandle, std::string>> buttons;
 
 	const auto addButton3D = [
 		&uiWorld,
+		&buttons,
 		&buttonPanel,
-		&buttonFont3D,
-		&makeCallbacks](
+		&buttonFont3D](
 			std::string text,
 			float positionY,
 			bool cursorEnabled,
@@ -111,7 +87,6 @@ void Main() {
 			.position = { 0.0f, positionY, 0.0f },
 			.size = { 3.6f, 0.65f },
 		};
-		desc.callbacks = makeCallbacks(text);
 		desc.draw = [&buttonPanel, &buttonFont3D, text](
 			const UIButtonDrawContext3D& context) {
 			Vector4 color{ 0.12f, 0.18f, 0.32f, 1.0f };
@@ -158,7 +133,9 @@ void Main() {
 		desc.isDirectPressed = std::move(isDirectPressed);
 		desc.isCursorEnabled = cursorEnabled;
 		desc.isNavigationEnabled = navigationEnabled;
-		return uiWorld.AddButton3D(desc);
+		const UIButtonHandle handle = uiWorld.AddButton3D(desc);
+		buttons.emplace_back(handle, std::move(text));
+		return handle;
 	};
 
 	addButton3D("Cursor + Navigation", 1.2f, true, true);
@@ -178,7 +155,6 @@ void Main() {
 		.position = { 24.0f, 184.0f },
 		.size = { 240.0f, 48.0f },
 	};
-	overlayButton.callbacks = makeCallbacks("2D Overlay Button");
 	overlayButton.draw = [&buttonFont2D](const UIButtonDrawContext& context) {
 		const Vector4 color = context.state.isHeld
 			? Color::HotPink
@@ -194,7 +170,9 @@ void Main() {
 				.anchor = { 0.5f, 0.5f },
 			});
 	};
-	uiWorld.AddButton(overlayButton);
+	buttons.emplace_back(
+		uiWorld.AddButton(overlayButton),
+		"2D Overlay Button");
 
 	const Window::Size initialWindowSize = Window::GetSize();
 	Vector2 cursorPosition{
@@ -252,6 +230,25 @@ void Main() {
 			.isNavigationPressed = submitCommand.Press(),
 			.cursor3D = MakeUICursor3D(camera, cursorPosition, 100.0f),
 		});
+
+		for (const auto& [handle, text] : buttons) {
+			const UIButtonEvents events = uiWorld.GetEvents(handle);
+			if (events.triggered) {
+				++triggerCount;
+				triggerMessage = "Trigger: " + text +
+					" (" + std::to_string(triggerCount) + ")";
+			}
+			if (events.held) {
+				++holdCount;
+				holdMessage = "Hold: " + text +
+					" (" + std::to_string(holdCount) + ")";
+			}
+			if (events.released) {
+				++releaseCount;
+				releaseMessage = "Release: " + text +
+					" (" + std::to_string(releaseCount) + ")";
+			}
+		}
 
 		camera.SetScene();
 		light.SetScene();
