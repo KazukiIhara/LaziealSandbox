@@ -82,15 +82,15 @@ void Main() {
 	std::string message = "Select a button";
 
 	while (System::Update()) {
-		int32_t navigationOffset = 0;
+		UISelectionChange selectionChange = UISelectionChange::None;
 		if (previousCommand.Trigger()) {
-			navigationOffset = -1;
+			selectionChange = UISelectionChange::Previous;
 		} else if (nextCommand.Trigger()) {
-			navigationOffset = 1;
+			selectionChange = UISelectionChange::Next;
 		}
 
 		uiWorld.Update({
-			.navigationOffset = navigationOffset,
+			.selectionChange = selectionChange,
 			.isNavigationPressed = submitCommand.Press(),
 			.isCursorEnabled = false,
 			});
