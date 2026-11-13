@@ -12,9 +12,10 @@ using namespace LGF;
 void Main() {
 	constexpr const char* kFontPath = "Assets/Fonts/NotoSansJP/NotoSansJP-wght.ttf";
 	const Font2D titleFont{ kFontPath, 40u };
-	const Font2D buttonFont{ kFontPath, 24u };
+	const Font2D buttonFont2D{ kFontPath, 20u };
 	const Font2D bodyFont{ kFontPath, 20u };
 	const Font2D captionFont{ kFontPath, 16u };
+	const Font3D buttonFont3D{ kFontPath, 32u };
 
 	Input::ClearCommands();
 	Input::RegisterCommand("UI.Previous", {
@@ -52,6 +53,15 @@ void Main() {
 	const InputCommand directButtonCommand{ "UI.DirectButton" };
 	const InputCommand toggleHitboxesCommand{ "UI.ToggleHitboxes" };
 
+	DebugCamera3D camera{ 8.0f };
+	const DirectionalLight light{
+		{ 0.3f, -1.0f, 0.5f },
+		Color::White,
+		1.5f,
+	};
+	const Grid3D grid{ 16.0f, 1.0f };
+	const UIPanel3D buttonPanel{};
+
 	UIWorld uiWorld;
 	std::string triggerMessage = "Trigger: -";
 	std::string holdMessage = "Hold: -";
@@ -60,28 +70,14 @@ void Main() {
 	uint32_t holdCount = 0u;
 	uint32_t releaseCount = 0u;
 
-	const auto addButton = [
-		&uiWorld,
-		&buttonFont,
+	const auto makeCallbacks = [
 		&triggerMessage,
 		&holdMessage,
 		&releaseMessage,
 		&triggerCount,
 		&holdCount,
-		&releaseCount](
-			std::string text,
-			float positionY,
-			bool cursorEnabled,
-			bool navigationEnabled,
-			std::function<bool()> isDirectPressed = {}) {
-		UIButtonDesc desc{};
-		desc.transform = {
-			.position = { 0.0f, positionY },
-			.size = { 440.0f, 58.0f },
-			.anchor = { 0.5f, 0.5f },
-			.pivot = { 0.5f, 0.5f },
-		};
-		desc.callbacks = {
+		&releaseCount](const std::string& text) {
+		return UIButtonCallbacks{
 			.onTrigger = [&, text] {
 				++triggerCount;
 				triggerMessage = "Trigger: " + text +
@@ -98,44 +94,107 @@ void Main() {
 					" (" + std::to_string(releaseCount) + ")";
 			},
 		};
-		desc.draw = [&buttonFont, text](const UIButtonDrawContext& context) {
-			Vector4 color{ 0.08f, 0.10f, 0.16f, 0.96f };
-			if (context.state.isHovered) {
-				color = Color::RoyalBlue;
-			}
+	};
+
+	const auto addButton3D = [
+		&uiWorld,
+		&buttonPanel,
+		&buttonFont3D,
+		&makeCallbacks](
+			std::string text,
+			float positionY,
+			bool cursorEnabled,
+			bool navigationEnabled,
+			std::function<bool()> isDirectPressed = {}) {
+		UIButtonDesc3D desc{};
+		desc.transform = {
+			.position = { 0.0f, positionY, 0.0f },
+			.size = { 3.6f, 0.65f },
+		};
+		desc.callbacks = makeCallbacks(text);
+		desc.draw = [&buttonPanel, &buttonFont3D, text](
+			const UIButtonDrawContext3D& context) {
+			Vector4 color{ 0.12f, 0.18f, 0.32f, 1.0f };
 			if (context.state.isSelected) {
-				color = Color::DarkOrange;
+				color = { 0.95f, 0.42f, 0.04f, 1.0f };
+			}
+			if (context.state.isHovered) {
+				color = { 0.05f, 0.42f, 1.0f, 1.0f };
 			}
 			if (context.state.isHeld) {
-				color = Color::HotPink;
+				color = { 1.0f, 0.08f, 0.48f, 1.0f };
 			}
 
-			context.rect.Draw(color);
-			buttonFont.Draw(
+			if (context.state.isSelected || context.state.isHovered ||
+				context.state.isHeld) {
+				Vector4 outlineColor = context.state.isSelected
+					? Color::Yellow
+					: Color::Cyan;
+				if (context.state.isHovered) {
+					outlineColor = Color::Cyan;
+				}
+				if (context.state.isHeld) {
+					outlineColor = Color::White;
+				}
+
+				const Matrix4x4 outlineMatrix = Math::MakeAffineMatrix(
+					{ 1.04f, 1.18f, 1.0f },
+					{},
+					{ 0.0f, 0.0f, 0.01f }) * context.worldMatrix;
+				buttonPanel.Draw(outlineMatrix, outlineColor);
+			}
+
+			buttonPanel.Draw(context.worldMatrix, color);
+			buttonFont3D.Draw(
 				text,
-				context.rect.leftTop + context.rect.size * 0.5f,
+				Math::Transform({ 0.0f, 0.0f, -0.01f }, context.worldMatrix),
 				{
 					.color = Color::White,
 					.anchor = { 0.5f, 0.5f },
+					.worldUnitsPerPixel = 0.008f,
+					.mode = Font3DMode::World,
 				});
 		};
 		desc.isDirectPressed = std::move(isDirectPressed);
 		desc.isCursorEnabled = cursorEnabled;
 		desc.isNavigationEnabled = navigationEnabled;
-		return uiWorld.AddButton(desc);
+		return uiWorld.AddButton3D(desc);
 	};
 
-	addButton("Cursor + Navigation", -108.0f, true, true);
-	addButton("Cursor Only", -36.0f, true, false);
-	addButton("Navigation Only", 36.0f, false, true);
-	addButton(
+	addButton3D("Cursor + Navigation", 1.2f, true, true);
+	addButton3D("Cursor Only", 0.4f, true, false);
+	addButton3D("Navigation Only", -0.4f, false, true);
+	addButton3D(
 		"Direct Input: 1 / Pad East",
-		108.0f,
+		-1.2f,
 		false,
 		false,
 		[&directButtonCommand] {
 			return directButtonCommand.Press();
 		});
+
+	UIButtonDesc overlayButton{};
+	overlayButton.transform = {
+		.position = { 24.0f, 184.0f },
+		.size = { 240.0f, 48.0f },
+	};
+	overlayButton.callbacks = makeCallbacks("2D Overlay Button");
+	overlayButton.draw = [&buttonFont2D](const UIButtonDrawContext& context) {
+		const Vector4 color = context.state.isHeld
+			? Color::HotPink
+			: context.state.isHovered
+				? Color::RoyalBlue
+				: Vector4{ 0.05f, 0.08f, 0.16f, 0.94f };
+		context.rect.Draw(color);
+		buttonFont2D.Draw(
+			"2D Overlay Button",
+			context.rect.leftTop + context.rect.size * 0.5f,
+			{
+				.color = Color::White,
+				.anchor = { 0.5f, 0.5f },
+			});
+	};
+	uiWorld.AddButton(overlayButton);
 
 	const Window::Size initialWindowSize = Window::GetSize();
 	Vector2 cursorPosition{
@@ -191,34 +250,35 @@ void Main() {
 			.isCursorPressed = pointerSubmitCommand.Press(),
 			.navigationOffset = navigationOffset,
 			.isNavigationPressed = submitCommand.Press(),
+			.cursor3D = MakeUICursor3D(camera, cursorPosition, 100.0f),
 		});
 
-		Rect2D{
-			0.0f,
-			0.0f,
-			static_cast<float>(windowSize.width),
-			static_cast<float>(windowSize.height),
-		}.Draw(Vector4{ 0.015f, 0.02f, 0.04f, 1.0f });
+		camera.SetScene();
+		light.SetScene();
+		grid.Draw();
+		uiWorld.Draw3D();
+		if (areHitboxesVisible) {
+			uiWorld.DrawHitboxes3D(Color::Lime);
+		}
 
 		titleFont.Draw(
-			"InputCommand + UIWorld Demo",
-			{ static_cast<float>(windowSize.width) * 0.5f, 34.0f },
+			"InputCommand + 2D / 3D UIWorld Demo",
+			{ static_cast<float>(windowSize.width) * 0.5f, 28.0f },
 			{
 				.color = Color::AliceBlue,
 				.anchor = { 0.5f, 0.0f },
 			});
-
 		captionFont.Draw(
 			"Mouse: Move / Left Click    Pad Cursor: Left Stick / Right Shoulder",
-			{ 24.0f, 94.0f },
+			{ 24.0f, 88.0f },
 			{ .color = Color::LightGray });
 		captionFont.Draw(
 			"Selection: W/S, Up/Down, Enter/Space    Pad: D-Pad / South",
-			{ 24.0f, 120.0f },
+			{ 24.0f, 114.0f },
 			{ .color = Color::LightGray });
 		captionFont.Draw(
 			"Direct: 1 / Pad East    Hitbox: F / Pad North",
-			{ 24.0f, 146.0f },
+			{ 24.0f, 140.0f },
 			{ .color = Color::LightGray });
 
 		uiWorld.Draw();
