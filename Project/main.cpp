@@ -3,118 +3,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <functional>
 #include <string>
-#include <utility>
 #include <vector>
 
 using namespace LGF;
-
-namespace {
-	using DemoButton = std::pair<UIButtonHandle, std::string>;
-
-	struct DemoButton3DDrawer {
-		const UIPanel3D* panel{};
-		const Font3D* font{};
-		std::string text;
-
-		void operator()(const UIButtonDrawContext3D& context) const {
-			Vector4 color{ 0.12f, 0.18f, 0.32f, 1.0f };
-			if (context.state.isSelected) {
-				color = { 0.95f, 0.42f, 0.04f, 1.0f };
-			}
-			if (context.state.isHovered) {
-				color = { 0.05f, 0.42f, 1.0f, 1.0f };
-			}
-			if (context.state.isHeld) {
-				color = { 1.0f, 0.08f, 0.48f, 1.0f };
-			}
-
-			if (context.state.isSelected || context.state.isHovered ||
-				context.state.isHeld) {
-				Vector4 outlineColor = context.state.isSelected
-					? Color::Yellow
-					: Color::Cyan;
-				if (context.state.isHovered) {
-					outlineColor = Color::Cyan;
-				}
-				if (context.state.isHeld) {
-					outlineColor = Color::White;
-				}
-
-				const Matrix4x4 outlineMatrix = Math::MakeAffineMatrix(
-					{ 1.04f, 1.18f, 1.0f },
-					{},
-					{ 0.0f, 0.0f, 0.01f }) * context.worldMatrix;
-				panel->Draw(outlineMatrix, outlineColor);
-			}
-
-			panel->Draw(context.worldMatrix, color);
-			font->Draw(
-				text,
-				Math::Transform({ 0.0f, 0.0f, -0.01f }, context.worldMatrix),
-				{
-					.color = Color::White,
-					.anchor = { 0.5f, 0.5f },
-					.worldUnitsPerPixel = 0.008f,
-					.mode = Font3DMode::World,
-				});
-		}
-	};
-
-	struct DemoButton2DDrawer {
-		const Font2D* font{};
-
-		void operator()(const UIButtonDrawContext& context) const {
-			const Vector4 color = context.state.isHeld
-				? Color::HotPink
-				: context.state.isHovered
-					? Color::RoyalBlue
-					: Vector4{ 0.05f, 0.08f, 0.16f, 0.94f };
-			context.rect.Draw(color);
-			font->Draw(
-				"2D Overlay Button",
-				context.rect.leftTop + context.rect.size * 0.5f,
-				{
-					.color = Color::White,
-					.anchor = { 0.5f, 0.5f },
-				});
-		}
-	};
-
-	struct InputCommandPress {
-		InputCommand command;
-
-		bool operator()() const {
-			return command.Press();
-		}
-	};
-
-	UIButtonHandle AddDemoButton3D(
-		UIWorld& uiWorld,
-		std::vector<DemoButton>& buttons,
-		const UIPanel3D& panel,
-		const Font3D& font,
-		std::string text,
-		float positionY,
-		bool cursorEnabled,
-		bool navigationEnabled,
-		std::function<bool()> isDirectPressed = {}) {
-		UIButtonDesc3D desc{};
-		desc.transform = {
-			.position = { 0.0f, positionY, 0.0f },
-			.size = { 3.6f, 0.65f },
-		};
-		desc.draw = DemoButton3DDrawer{ &panel, &font, text };
-		desc.isDirectPressed = std::move(isDirectPressed);
-		desc.isCursorEnabled = cursorEnabled;
-		desc.isNavigationEnabled = navigationEnabled;
-
-		const UIButtonHandle handle = uiWorld.AddButton3D(desc);
-		buttons.emplace_back(handle, std::move(text));
-		return handle;
-	}
-}
 
 void Main() {
 	constexpr const char* kFontPath = "Assets/Fonts/NotoSansJP/NotoSansJP-wght.ttf";
@@ -157,7 +49,6 @@ void Main() {
 	const InputCommand nextCommand{ "UI.Next" };
 	const InputCommand submitCommand{ "UI.Submit" };
 	const InputCommand pointerSubmitCommand{ "UI.PointerSubmit" };
-	const InputCommand directButtonCommand{ "UI.DirectButton" };
 	const InputCommand toggleHitboxesCommand{ "UI.ToggleHitboxes" };
 
 	DebugCamera3D camera{ 8.0f };
@@ -170,43 +61,58 @@ void Main() {
 	const UIPanel3D buttonPanel{};
 
 	UIWorld uiWorld;
+	std::vector<UIButton> buttons3D;
+	buttons3D.push_back(uiWorld.AddButton3D({
+		.text = "Cursor + Navigation",
+		.transform = {
+			.position = { 0.0f, 1.2f, 0.0f },
+			.size = { 3.6f, 0.65f },
+		},
+		.isNavigationEnabled = true,
+	}));
+	buttons3D.push_back(uiWorld.AddButton3D({
+		.text = "Cursor Only",
+		.transform = {
+			.position = { 0.0f, 0.4f, 0.0f },
+			.size = { 3.6f, 0.65f },
+		},
+	}));
+	buttons3D.push_back(uiWorld.AddButton3D({
+		.text = "Navigation Only",
+		.transform = {
+			.position = { 0.0f, -0.4f, 0.0f },
+			.size = { 3.6f, 0.65f },
+		},
+		.isCursorEnabled = false,
+		.isNavigationEnabled = true,
+	}));
+	buttons3D.push_back(uiWorld.AddButton3D({
+		.text = "Direct Input: 1 / Pad East",
+		.transform = {
+			.position = { 0.0f, -1.2f, 0.0f },
+			.size = { 3.6f, 0.65f },
+		},
+		.directInputCommand = "UI.DirectButton",
+		.isCursorEnabled = false,
+	}));
+
+	UIButton overlayButton = uiWorld.AddButton({
+		.text = "2D Overlay Button",
+		.transform = {
+			.position = { 24.0f, 184.0f },
+			.size = { 240.0f, 48.0f },
+		},
+	});
+
+	std::vector<UIButton> buttons = buttons3D;
+	buttons.push_back(overlayButton);
+
 	std::string triggerMessage = "Trigger: -";
 	std::string holdMessage = "Hold: -";
 	std::string releaseMessage = "Release: -";
 	uint32_t triggerCount = 0u;
 	uint32_t holdCount = 0u;
 	uint32_t releaseCount = 0u;
-	std::vector<DemoButton> buttons;
-
-	AddDemoButton3D(
-		uiWorld, buttons, buttonPanel, buttonFont3D,
-		"Cursor + Navigation", 1.2f, true, true);
-	AddDemoButton3D(
-		uiWorld, buttons, buttonPanel, buttonFont3D,
-		"Cursor Only", 0.4f, true, false);
-	AddDemoButton3D(
-		uiWorld, buttons, buttonPanel, buttonFont3D,
-		"Navigation Only", -0.4f, false, true);
-	AddDemoButton3D(
-		uiWorld,
-		buttons,
-		buttonPanel,
-		buttonFont3D,
-		"Direct Input: 1 / Pad East",
-		-1.2f,
-		false,
-		false,
-		InputCommandPress{ directButtonCommand });
-
-	UIButtonDesc overlayButton{};
-	overlayButton.transform = {
-		.position = { 24.0f, 184.0f },
-		.size = { 240.0f, 48.0f },
-	};
-	overlayButton.draw = DemoButton2DDrawer{ &buttonFont2D };
-	buttons.emplace_back(
-		uiWorld.AddButton(overlayButton),
-		"2D Overlay Button");
 
 	const Window::Size initialWindowSize = Window::GetSize();
 	Vector2 cursorPosition{
@@ -265,19 +171,19 @@ void Main() {
 			.cursor3D = MakeUICursor3D(camera, cursorPosition, 100.0f),
 		});
 
-		for (const auto& [handle, text] : buttons) {
-			const UIButtonEvents events = uiWorld.GetEvents(handle);
-			if (events.triggered) {
+		for (const UIButton& button : buttons) {
+			const std::string text = button.GetText();
+			if (button.Trigger()) {
 				++triggerCount;
 				triggerMessage = "Trigger: " + text +
 					" (" + std::to_string(triggerCount) + ")";
 			}
-			if (events.held) {
+			if (button.Press()) {
 				++holdCount;
-				holdMessage = "Hold: " + text +
+				holdMessage = "Press: " + text +
 					" (" + std::to_string(holdCount) + ")";
 			}
-			if (events.released) {
+			if (button.Release()) {
 				++releaseCount;
 				releaseMessage = "Release: " + text +
 					" (" + std::to_string(releaseCount) + ")";
@@ -287,7 +193,9 @@ void Main() {
 		camera.SetScene();
 		light.SetScene();
 		grid.Draw();
-		uiWorld.Draw3D();
+		for (const UIButton& button : buttons3D) {
+			button.Draw(buttonPanel, buttonFont3D);
+		}
 		if (areHitboxesVisible) {
 			uiWorld.DrawHitboxes3D(Color::Lime);
 		}
@@ -312,7 +220,7 @@ void Main() {
 			{ 24.0f, 140.0f },
 			{ .color = Color::LightGray });
 
-		uiWorld.Draw();
+		overlayButton.Draw(buttonFont2D);
 		if (areHitboxesVisible) {
 			uiWorld.DrawHitboxes({ 0.0f, 1.0f, 0.0f, 0.22f });
 		}
