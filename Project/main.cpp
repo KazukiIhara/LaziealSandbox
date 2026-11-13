@@ -1,7 +1,5 @@
 #include <LGF/LGF.h>
 
-#include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -114,44 +112,13 @@ void Main() {
 	uint32_t holdCount = 0u;
 	uint32_t releaseCount = 0u;
 
-	const Window::Size initialWindowSize = Window::GetSize();
-	Vector2 cursorPosition{
-		static_cast<float>(initialWindowSize.width) * 0.5f,
-		static_cast<float>(initialWindowSize.height) * 0.5f,
-	};
-	bool isPadCursor = false;
+	UIPointer uiPointer;
 	bool areHitboxesVisible = false;
 
 	while (System::Update()) {
-		const Gamepad gamepad{ 0u };
-		const Vector2 stick = gamepad.LeftStick();
-		constexpr float kStickDeadZone = 0.18f;
-		constexpr float kCursorSpeed = 720.0f;
-		if (std::abs(stick.x) >= kStickDeadZone ||
-			std::abs(stick.y) >= kStickDeadZone) {
-			isPadCursor = true;
-			const float deltaTime = static_cast<float>(System::DeltaTime());
-			cursorPosition += Vector2{ stick.x, -stick.y } *
-				(kCursorSpeed * deltaTime);
-		}
-
-		const Vector2 mouseCursorDelta = Cursor::Delta();
-		if (mouseCursorDelta.x != 0.0f || mouseCursorDelta.y != 0.0f) {
-			isPadCursor = false;
-		}
-		if (!isPadCursor) {
-			cursorPosition = Cursor::Pos();
-		}
-
+		uiPointer.Update();
+		const Vector2& cursorPosition = uiPointer.GetPosition();
 		const Window::Size windowSize = Window::GetSize();
-		cursorPosition.x = std::clamp(
-			cursorPosition.x,
-			0.0f,
-			static_cast<float>(windowSize.width));
-		cursorPosition.y = std::clamp(
-			cursorPosition.y,
-			0.0f,
-			static_cast<float>(windowSize.height));
 
 		int32_t navigationOffset = 0;
 		if (previousCommand.Trigger()) {
@@ -232,10 +199,6 @@ void Main() {
 		bodyFont.Draw(holdMessage, { 42.0f, statusTop + 40.0f });
 		bodyFont.Draw(releaseMessage, { 42.0f, statusTop + 68.0f });
 
-		const Vector4 cursorColor = isPadCursor ? Color::HotPink : Color::Cyan;
-		Rect2D{
-			cursorPosition - Vector2{ 7.0f, 7.0f },
-			{ 14.0f, 14.0f },
-		}.Draw(cursorColor);
+		uiPointer.Draw();
 	}
 }
