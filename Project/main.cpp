@@ -33,7 +33,7 @@ void Main() {
 	const InputCommand submitCommand{ "UI.Submit" };
 
 	UIWorld uiWorld;
-	std::vector<UIButton> buttons;
+	std::vector<UIButtonHandle> buttons;
 	buttons.push_back(uiWorld.AddButton({
 		.text = "Start Game",
 		.transform = {
@@ -95,9 +95,9 @@ void Main() {
 			.isCursorEnabled = false,
 			});
 
-		for (const UIButton& button : buttons) {
-			if (button.Trigger()) {
-				message = button.GetText() + " selected";
+		for (const UIButtonHandle button : buttons) {
+			if (uiWorld.Trigger(button)) {
+				message = uiWorld.GetText(button) + " selected";
 			}
 		}
 
@@ -117,9 +117,7 @@ void Main() {
 				.anchor = { 0.5f, 0.0f },
 			});
 
-			for (const UIButton& button : buttons) {
-				button.Draw(buttonFont);
-			}
+			uiWorld.Draw(buttonFont);
 
 			captionFont.Draw(
 				message,
