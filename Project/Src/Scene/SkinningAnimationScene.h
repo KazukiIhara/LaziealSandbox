@@ -11,7 +11,7 @@ public:
 	~SkinningAnimationScene();
 
 	void Update();
-	void Draw() const;
+	void Draw();
 
 private:
 	LGF::Model foxModel_;
@@ -24,6 +24,9 @@ private:
 	LGF::Ground3D ground_;
 	LGF::Font2D titleFont_;
 	LGF::Font2D captionFont_;
+	LGF::RenderTargetTexture renderTarget_;
+	LGF::Sprite renderTargetPreview_;
+	LGF::Camera3D renderPassCamera_;
 	std::vector<LGF::ModelInstance3D> walkInstances_;
 	std::string animationNames_;
 };

@@ -47,6 +47,19 @@ SkinningAnimationScene::SkinningAnimationScene() :
 	ground_(32.0f, 28.0f),
 	titleFont_(kFontPath, 32u),
 	captionFont_(kFontPath, 18u),
+	renderTarget_({
+		.width = 640u,
+		.height = 360u,
+		.clearColor = { 0.04f, 0.06f, 0.08f, 1.0f },
+	}),
+	renderTargetPreview_(
+		renderTarget_.GetTexture(),
+		{ 0.0f, 20.0f },
+		{ 384.0f, 216.0f }),
+	renderPassCamera_(
+		{ 0.0f, 5.0f, -16.0f },
+		0.0f,
+		-8.0f * Math::DEG_TO_RAD),
 	animationNames_(JoinAnimationNames(walkAnimator_.GetAnimationNames())) {
 
 	if (!walkAnimator_.Play("Walk", { .loop = true, .fadeDuration = 0.2f }) ||
@@ -91,10 +104,26 @@ void SkinningAnimationScene::Update() {
 	runAnimator_.Update(deltaTime);
 }
 
-void SkinningAnimationScene::Draw() const {
-	camera_.SetScene();
+void SkinningAnimationScene::Draw() {
 	directionalLight_.SetScene();
 	skybox_.SetScene();
+
+	Graphics3D::BeginRenderPass(renderTarget_, renderPassCamera_);
+	ground_.Draw(
+		Math::MakeTranslateMatrix({ 0.0f, -0.02f, 2.0f }),
+		Vector4{ 0.12f, 0.16f, 0.20f, 1.0f });
+	foxModel_.DrawInstanced(walkInstances_, walkAnimator_);
+	foxModel_.Draw(
+		MakeFoxWorldMatrix({ -5.0f, 0.0f, -7.0f }),
+		surveyAnimator_,
+		{ .color = Color::Gold });
+	foxModel_.Draw(
+		MakeFoxWorldMatrix({ 5.0f, 0.0f, -7.0f }),
+		runAnimator_,
+		{ .color = Color::SkyBlue });
+	Graphics3D::EndRenderPass();
+
+	camera_.SetScene();
 
 	ground_.Draw(
 		Math::MakeTranslateMatrix({ 0.0f, -0.02f, 2.0f }),
@@ -132,4 +161,13 @@ void SkinningAnimationScene::Draw() const {
 		"Arrow keys: orbit    Q / E: camera distance",
 		{ 24.0f, 140.0f },
 		{ .color = Color::LightGray });
+
+	renderTargetPreview_.leftTop = {
+		static_cast<float>(Graphics3D::GetWindowWidth()) - renderTargetPreview_.size.x - 24.0f,
+		20.0f };
+	renderTargetPreview_.Draw();
+	captionFont_.Draw(
+		"Custom RenderPass (640 x 360)",
+		{ renderTargetPreview_.leftTop.x, renderTargetPreview_.leftTop.y + renderTargetPreview_.size.y + 8.0f },
+		{ .color = Color::Cyan });
 }
