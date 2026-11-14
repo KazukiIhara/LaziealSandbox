@@ -1,0 +1,188 @@
+diff --git a/Project/Src/Cooking/Rice.h b/Project/Src/Cooking/Rice.h
+--- a/Project/Src/Cooking/Rice.h
++++ b/Project/Src/Cooking/Rice.h
+@@ -11,7 +11,8 @@ public:
+ 	Rice(
+ 		LGF::Physics::PhysicsWorld& physicsWorld,
+ 		const LGF::Vector3& position,
+-		LGF::ObjectHandle objectHandle);
++		LGF::ObjectHandle objectHandle,
++		LGF::Physics::PhysicsParticleRenderGroupHandle renderGroup);
+@@ -20,11 +21,6 @@ public:
+ 	Rice(const Rice&) = delete;
+ 	Rice& operator=(const Rice&) = delete;
+-
+-	/// <summary>
+-	/// 描画処理
+-	/// </summary>
+-	void Draw() const;
+ 
+ private:
+diff --git a/Project/Src/Cooking/Rice.cpp b/Project/Src/Cooking/Rice.cpp
+--- a/Project/Src/Cooking/Rice.cpp
++++ b/Project/Src/Cooking/Rice.cpp
+@@ -1,8 +1,5 @@
+ #include "Rice.h"
+ 
+-#include "LGF/Graphics/Sphere3D.h"
+-#include "LGF/LGFMath.h"
+-
+ using namespace LGF;
+@@ -14,7 +11,8 @@ Rice::Rice(
+ 	Physics::PhysicsWorld& physicsWorld,
+ 	const Vector3& position,
+-	ObjectHandle objectHandle) :
++	ObjectHandle objectHandle,
++	Physics::PhysicsParticleRenderGroupHandle renderGroup) :
+ 	physicsWorld_(&physicsWorld) {
+@@ -22,6 +20,7 @@ Rice::Rice(
+ 		.mass = 0.02f,
+ 		.material = { .restitution = 0.08f, .friction = 0.65f },
+ 		.objectHandle = objectHandle,
++		.renderGroup = renderGroup,
+ 	});
+@@ -30,20 +29,3 @@ Rice::~Rice() {
+ 	}
+ }
+-
+-void Rice::Draw() const {
+-	if (physicsWorld_ == nullptr) {
+-		return;
+-	}
+-
+-	const auto state = physicsWorld_->GetParticleState(physicsHandle_);
+-	if (!state.has_value()) {
+-		return;
+-	}
+-
+-	Sphere3D(state->radius).Draw(
+-		Math::MakeTranslateMatrix(state->position),
+-		Vector4{ 0.95f, 0.92f, 0.78f, 1.0f });
+-}
+diff --git a/Project/Src/Cooking/IngredientManager.h b/Project/Src/Cooking/IngredientManager.h
+--- a/Project/Src/Cooking/IngredientManager.h
++++ b/Project/Src/Cooking/IngredientManager.h
+@@ -45,6 +45,7 @@ private:
+ private:
+ 	LGF::Physics::PhysicsWorld* physicsWorld_ = nullptr;
++	LGF::Physics::PhysicsParticleRenderGroupHandle riceRenderGroup_{};
+ 	CookingFriedRice cookingFriedRice_;
+diff --git a/Project/Src/Cooking/IngredientManager.cpp b/Project/Src/Cooking/IngredientManager.cpp
+--- a/Project/Src/Cooking/IngredientManager.cpp
++++ b/Project/Src/Cooking/IngredientManager.cpp
+@@ -15,7 +15,11 @@ namespace {
+ }
+ 
+ IngredientManager::IngredientManager(Physics::PhysicsWorld& physicsWorld) :
+-	physicsWorld_(&physicsWorld) {}
++	physicsWorld_(&physicsWorld) {
++	riceRenderGroup_ = physicsWorld_->CreateParticleRenderGroup({
++		.color = { 0.95f, 0.92f, 0.78f, 1.0f },
++	});
++}
+@@ -27,9 +31,7 @@ void IngredientManager::Update(const Vector3& riceSpawnPosition) {
+ }
+ 
+ void IngredientManager::Draw() const {
+-	for (const auto& rice : riceObjects_) {
+-		rice->Draw();
+-	}
++	physicsWorld_->DrawParticleRenderGroups();
+ }
+@@ -68,7 +70,8 @@ void IngredientManager::AddRice(const Vector3& spawnPosition) {
+ 			*physicsWorld_,
+ 			position,
+-			ObjectHandle{ nextObjectIndex_++, 1u }));
++			ObjectHandle{ nextObjectIndex_++, 1u },
++			riceRenderGroup_));
+ 	}
+diff --git a/Project/Src/Scene/GamePlayScene.cpp b/Project/Src/Scene/GamePlayScene.cpp
+--- a/Project/Src/Scene/GamePlayScene.cpp
++++ b/Project/Src/Scene/GamePlayScene.cpp
+@@ -22,6 +22,9 @@ namespace {
+ 		};
+ 		settings.substepCount = 8u;
+ 		settings.solverIterationCount = 8u;
++		settings.maximumParticleCount = 4096u;
++		settings.maximumColliderCount = 256u;
++		settings.maximumParticleCommandCount = 16384u;
+ 		return settings;
+ 	}
+diff --git a/Project/Src/Scene/PhysicsWorldDemoScene.h b/Project/Src/Scene/PhysicsWorldDemoScene.h
+--- a/Project/Src/Scene/PhysicsWorldDemoScene.h
++++ b/Project/Src/Scene/PhysicsWorldDemoScene.h
+@@ -29,10 +29,10 @@ private:
+ 	LGF::Physics::PhysicsWorld physicsWorld_;
+ 	LGF::Physics::DynamicObjectHandle playerHandle_{};
+ 	LGF::Physics::KinematicObjectHandle platformHandle_{};
++	LGF::Physics::PhysicsParticleRenderGroupHandle particleRenderGroup_{};
+ 	std::vector<LGF::Physics::StaticObjectState> staticObjectStates_;
+ 	std::vector<LGF::Physics::KinematicObjectState> kinematicObjectStates_;
+ 	std::vector<LGF::Physics::DynamicObjectState> dynamicObjectStates_;
+-	std::vector<LGF::Physics::PhysicsParticleState> particleStates_;
+diff --git a/Project/Src/Scene/PhysicsWorldDemoScene.cpp b/Project/Src/Scene/PhysicsWorldDemoScene.cpp
+--- a/Project/Src/Scene/PhysicsWorldDemoScene.cpp
++++ b/Project/Src/Scene/PhysicsWorldDemoScene.cpp
+@@ -26,6 +26,9 @@ namespace {
+ 		};
+ 		settings.substepCount = 8u;
+ 		settings.solverIterationCount = 6u;
++		settings.maximumParticleCount = 1024u;
++		settings.maximumColliderCount = 64u;
++		settings.maximumParticleCommandCount = 4096u;
+ 		return settings;
+ 	}
+@@ -58,6 +61,9 @@ PhysicsWorldDemoScene::PhysicsWorldDemoScene(const InitData& init) :
+ 	SampleScene(init),
+ 	physicsWorld_(MakeWorldSettings()) {
++	particleRenderGroup_ = physicsWorld_.CreateParticleRenderGroup({
++		.color = Color::White,
++	});
+ 	Reset();
+ }
+@@ -111,7 +117,6 @@ void PhysicsWorldDemoScene::Update() {
+ 	physicsWorld_.GetStaticObjectStates(staticObjectStates_);
+ 	physicsWorld_.GetKinematicObjectStates(kinematicObjectStates_);
+ 	physicsWorld_.GetDynamicObjectStates(dynamicObjectStates_);
+-	physicsWorld_.GetParticleStates(particleStates_);
+ 	DrawDebugWindow();
+ }
+@@ -160,11 +165,7 @@ void PhysicsWorldDemoScene::Draw() const {
+ 			color);
+ 	}
+-
+-	for (const Physics::PhysicsParticleState& state : particleStates_) {
+-		Sphere3D(state.radius).Draw(
+-			Math::MakeTranslateMatrix(state.position),
+-			Color::White);
+-	}
++	physicsWorld_.DrawParticleRenderGroups();
+ }
+@@ -174,7 +175,6 @@ void PhysicsWorldDemoScene::Reset() {
+ 	staticObjectStates_.clear();
+ 	kinematicObjectStates_.clear();
+ 	dynamicObjectStates_.clear();
+-	particleStates_.clear();
+@@ -249,7 +249,6 @@ void PhysicsWorldDemoScene::Reset() {
+ 	physicsWorld_.GetStaticObjectStates(staticObjectStates_);
+ 	physicsWorld_.GetKinematicObjectStates(kinematicObjectStates_);
+ 	physicsWorld_.GetDynamicObjectStates(dynamicObjectStates_);
+-	physicsWorld_.GetParticleStates(particleStates_);
+ }
+@@ -298,6 +297,7 @@ void PhysicsWorldDemoScene::SpawnParticles(std::size_t count) {
+ 			.mass = 0.15f,
+ 			.material = { .restitution = 0.3f, .friction = 0.2f },
+ 			.objectHandle = { objectIndex, 1u },
++			.renderGroup = particleRenderGroup_,
+ 		});
+@@ -410,9 +410,12 @@ void PhysicsWorldDemoScene::DrawDebugWindow() {
+ 			settings.substepCount,
+ 			settings.solverIterationCount);
+ 		ImGui::Text(
+-			"Particle step: %.3f ms  Candidate pairs: %llu",
+-			statistics.totalMilliseconds,
+-			static_cast<unsigned long long>(statistics.candidatePairCount));
++			"GPU particle stats: %s  Candidate pairs: %llu  Latency: %u frames",
++			statistics.isAvailable ? "available" : "pending",
++			static_cast<unsigned long long>(statistics.candidatePairCount),
++			statistics.latencyFrames);
