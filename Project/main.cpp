@@ -1,11 +1,11 @@
 #include <LGF/LGF.h>
 
-#include "Scene/SkinningAnimationScene.h"
+#include "Scene/PostProcessScene.h"
 
 using namespace LGF;
 
 void Main() {
-	SkinningAnimationScene scene;
+	PostProcessScene scene;
 
 	while (System::Update()) {
 		scene.Update();
