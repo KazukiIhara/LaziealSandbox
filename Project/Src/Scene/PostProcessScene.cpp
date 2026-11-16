@@ -12,7 +12,6 @@ namespace {
 		"Assets/Textures/Environment/StoryStudio02/story_studio_02_2k.hdr";
 	constexpr const char* kProfilePath = "Default.json";
 	constexpr const char* kBloomId = "MainBloom";
-	constexpr const char* kToneMappingId = "Output";
 	constexpr const char* kColorAdjustmentId = "SceneColor";
 	constexpr const char* kVignetteId = "Vignette";
 
@@ -174,7 +173,7 @@ void PostProcessScene::ApplyPostProcessSettings() {
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kVignetteId, "Smoothness", vignetteSmoothness_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kVignetteId, "Roundness", vignetteRoundness_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kVignetteId, "Color", vignetteColor_);
-	Graphics3D::SetPostProcessParameter(postProcessProfile_, kToneMappingId, "ExposureEV", exposureEV_);
+	Graphics3D::SetToneMappingParameter(postProcessProfile_, "ExposureEV", exposureEV_);
 }
 
 void PostProcessScene::ResetPostProcessSettings() {
