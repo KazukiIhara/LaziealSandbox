@@ -1,218 +1,197 @@
 # LaziealSandbox
 
-LaziealRuntimeとLaziealGraphicsFrameworkの機能を確認するための、
-サンプルアプリケーション兼開発用サンドボックスです。
+DirectX 12とC++20で開発している自作ゲームフレームワークのサンプル兼開発環境です。
 
-## クローン
+ゲーム側から扱いやすいAPIと、設定や描画パイプラインを外部ファイルで管理できるData Drivenな構成を目指しています。
 
-依存リポジトリを含めて取得します。
+現在は開発中です。APIやプロジェクト構成は予告なく変更される場合があります。
+
+## 構成
+
+このリポジトリは、次の3層で構成されています。
+
+- `LaziealSandbox`: 機能の実装例と動作確認を行うアプリケーション
+- `LaziealRuntime`: ウィンドウ、入力、音声、時間、シーン、物理などを管理するランタイム
+- `LaziealGraphicsFramework`: DirectX 12を使用した描画とGPU処理を担当するグラフィックス基盤
+
+`LaziealRuntime`と`LaziealGraphicsFramework`はGit submoduleとして参照されます。
+
+## 主な機能
+
+### グラフィックス
+
+- 2D・3Dプリミティブ描画と、Mesh Shaderによる3Dインスタンシング
+- Deferred RenderingとMetallic-Roughness PBR
+- HDR、ACES Filmic Tone Mapping、露出補正
+- SkyboxとImage Based Lighting
+- 平行光源、ポイントライト、Cascaded Shadow Maps
+- glTFなどの3Dモデル読み込み
+- スキニングアニメーション、アニメーション切り替え、インスタンシング
+- Sprite、2D・3Dフォント、Dear ImGui
+- 任意のRender Targetへ描画するカスタムRenderPass
+- CPU・GPUパーティクル
+- JSONからのGraphics Pipeline、Compute Pipeline生成
+
+### ランタイム
+
+- Win32ウィンドウとフレームループ
+- キーボード、マウス、ゲームパッド、Joy-Con入力
+- WAV・MP3音声再生
+- Delta Timeと簡易アニメーション
+- シーン管理
+- 3D衝突判定とCollider管理
+- 静的・キネマティック・動的オブジェクトを扱う物理ワールド
+- GPUで計算・描画する物理粒子
+- 型付きJSONパラメータと専用パラメータエディタ
+
+## 動作環境
+
+- Windows 10以降
+- Visual Studio 2022またはVisual Studio 2026
+- C++20対応MSVCツールセット
+- Windows SDKとDirectX Shader Compiler
+- DirectX 12対応GPU
+  - Mesh Shader Tier 1以上
+  - Shader Model 6.6以上
+  - Resource Binding Tier 3
+
+## セットアップ
+
+依存リポジトリを含めてクローンします。
 
 ```powershell
 git clone --recursive <repository-url>
 ```
 
-再帰オプションを付けずにクローンした場合は、次のコマンドで依存リポジトリを取得できます。
+通常のクローンを行った場合は、後からsubmoduleを取得できます。
 
 ```powershell
 git submodule update --init --recursive
 ```
 
-SandboxはLaziealRuntimeを参照し、LaziealRuntimeは
-LaziealGraphicsFrameworkを参照する入れ子構成になっています。
+使用するVisual Studioに対応したバッチファイルを実行します。
 
-## プロジェクト生成とビルド
+```powershell
+cd Project
+./Premake.bat
+```
 
-`Project/Premake.bat`を実行した後、生成された
-`Project/LaziealSandbox.slnx`をVisual Studioで開き、x64構成をビルドします。
-RuntimeとGraphicsのプロジェクトもソリューションから参照され、依存順にビルドされます。
+`Premake.bat`はVisual Studio 2026用です。Visual Studio 2022を使用する場合は、代わりに`PremakeVS2022.bat`を実行してください。
+
+生成された`Project/LaziealSandbox.slnx`または`Project/LaziealSandbox.sln`を開き、`x64`の`Develop`構成をビルドします。
+
+ビルド結果は次のディレクトリへ出力されます。
+
+```text
+generated/outputs/<Configuration>/x64
+```
+
+## 基本的な使い方
+
+アプリケーション側では`LGF/LGF.h`をインクルードし、`Main()`を定義します。エントリーポイントと初期化・終了処理はランタイムが管理します。
+
+```cpp
+#include <LGF/LGF.h>
+
+void Main() {
+    while (LGF::System::Update()) {
+        // 更新処理
+        // 描画処理
+    }
+}
+```
+
+Sandboxの実装は`Project/main.cpp`と`Project/Src`にあります。
+
+## 現在のサンプル
+
+現在のSandboxでは、Foxモデルを使用したスキニングアニメーションを表示します。
+
+- 1つのAnimatorとスキニング結果を共有する24体のインスタンス描画
+- 個別のAnimatorで再生する`Survey`と`Run`アニメーション
+- 平行光源、Skybox、Groundによる3Dシーン
+- 640 x 360のRender Targetへ描画したシーンのSprite表示
+- 2Dフォントによるデバッグ情報の表示
+
+カメラは次のキーで操作できます。
+
+- `矢印キー`: カメラを回転
+- `Q` / `E`: カメラ距離を変更
 
 ## ランタイム設定
 
-起動設定は`Project/RuntimeSetting.ini`から読み込まれます。
-ファイルが存在しない場合はデフォルト値で自動生成されます。
-エンジン更新で設定項目が追加された場合も、読み込めた既存値と不足項目の
-デフォルト値を使って、既定のセクション・項目順に自動更新されます。
-自動更新時はコメント、未知の項目、独自の並び順は保持されません。
-
-- `[Runtime] assetRoot`: 初期化時に使用するアセットルート
-- `[Audio] enabled`: 音声機能を初期化するか
-- `[Audio] masterVolume`: 全音声へ適用するマスター音量（0.0～1.0）
-- `[Window] title`: UTF-8形式のウィンドウタイトル
-- `[Window] width`, `height`: 起動時のクライアント領域サイズ
-- `[Window] fullscreen`: フルスクリーンで起動するか
-
-実行中のタイトル、ウィンドウサイズ、フルスクリーン状態は`LGF::Window`から変更できます。
-アセットルートは初期化後に変更できません。
-
-## 音声再生
-
-`LGF::Audio`はWAV、MP3形式の音声を読み込みます。
-相対パスは`RuntimeSetting.ini`の`assetRoot`を基準に解決されます。
-
-```cpp
-LGF::Audio bgm{ "Audio/Bgm.mp3" };
-bgm.SetLoop(true);
-bgm.SetVolume(0.5f);
-bgm.Play();
-```
-
-`Play`、`Pause`、`Stop`で再生状態を制御でき、`GetDuration`と
-`GetPosition`は秒単位の値を返します。同じ`Audio`をコピーした場合は、
-読み込んだ音声と再生状態を共有します。
-
-## フォントとテキスト描画
-
-`LGF::Font2D`はフォントファイルとピクセルサイズを指定して読み込み、
-UTF-8文字列を2D描画します。同じパスとサイズのフォントは内部リソースを共有します。
-
-```cpp
-LGF::Font2D font{ "Assets/Fonts/NotoSansJP/NotoSansJP-wght.ttf", 32u };
-font.Draw("スコア: 100", { 32.0f, 32.0f }, {
-    .color = LGF::Color::White,
-    .anchor = { 0.0f, 0.0f },
-});
-
-const LGF::Vector2 textSize = font.Measure("スコア: 100");
-```
-
-初めて使用する文字はグリフアトラスへ追加され、以降の描画で再利用されます。
-`Draw`と`Measure`は改行、タブ、カーニングに対応します。
-`anchor`は`{ 0.0f, 0.0f }`が左上、`{ 0.5f, 0.5f }`が中央、
-`{ 1.0f, 1.0f }`が右下を表し、Font2DとFont3Dで共通です。
-
-`LGF::Font3D`は同じフォントリソースを使用して、3D空間へ文字列を描画します。
-既定では常にカメラを向くBillboard表示になります。
-
-```cpp
-LGF::Font3D font{ "Assets/Fonts/NotoSansJP/NotoSansJP-wght.ttf", 64u };
-font.Draw("Billboard Text", { 0.0f, 2.0f, 0.0f });
-
-font.Draw("World Text", { 0.0f, 1.0f, 0.0f }, {
-    .color = LGF::Color::Gold,
-    .anchor = { 0.5f, 0.5f },
-    .worldUnitsPerPixel = 0.01f,
-    .mode = LGF::Font3DMode::World,
-    .rotation = LGF::Math::MakeQuaternion({ 0.0f, 0.5f, 0.0f }),
-});
-```
-
-`Font3D::Measure`はグリフのピクセル単位で領域を返します。
-ワールド上の大きさは戻り値へ`worldUnitsPerPixel`を掛けて取得できます。
-
-## JSONパラメータ
-
-`LGF::Parameter`を使うと、`Assets/Parameters`内のJSONから型付きの値を
-静的APIで取得できます。ファイルは初回アクセス時に読み込まれ、キャッシュされます。
-
-```cpp
-const LGF::Vector3 position =
-    LGF::Parameter::Get<LGF::Vector3>("Sphere.json", "Pos");
-const float speed =
-    LGF::Parameter::GetOr<float>("Player.json", "Speed", 1.0f);
-```
-
-必須パラメータには`Get`、既定値を許容するパラメータには`GetOr`、
-取得失敗を呼び出し側で処理する場合は`TryGet`を使用します。
-ファイルを読み直す場合は`Reload`、全キャッシュを破棄する場合は`ClearCache`を
-使用します。
-
-`LGF::ParameterDocument`は、階層化した型付きパラメータをJSONファイルへ
-読み書きします。対応型は`bool`、`int32_t`、`float`、`Vector2`、`Vector3`、
-`Vector4`、`std::string`です。
-
-```cpp
-LGF::ParameterDocument parameters;
-if (parameters.Load("Assets/Parameters/FriedRice.json")) {
-    const float friction =
-        parameters.GetOr<float>("Physics/DynamicFriction", 0.45f);
-}
-```
-
-`LaziealParameterEditor`はLaziealRuntime側のソリューションに生成される
-開発ツール用の実行ファイルです。
-初回起動時に選択したディレクトリ内のJSONをImGuiから作成・編集・保存できます。
-選択したディレクトリは次回起動時にも引き継がれ、ツールバーの`Change...`から
-変更できます。
-保存は明示操作でのみ行われ、読み込みに失敗しても現在のドキュメントは保持されます。
-
-LaziealRuntime側でビルドした後、`Tools/DeployParameterEditor.bat`を実行すると、
-`Tools/ParameterEditor`へ設定、アセット、DLLを含む実行一式が配置されます。
-引数を省略した場合は`Develop`構成が使用されます。別構成を配置する場合は、
-`Tools/DeployParameterEditor.bat Debug`のように構成名を指定します。
-
-## ゲームパッドとJoy-Con
-
-ゲームパッド入力にはSDL3を使用しています。既定では左右のJoy-Conを合成せず、
-アプリケーションから個別に取得できます。
+起動設定は`Project/RuntimeSetting.ini`で管理します。
 
 ```ini
-[Input.Gamepad]
+[Runtime]
+assetRoot = ../Dependencies/LaziealRuntime/Dependencies/LaziealGraphicsFramework/Project/Assets
+
+[Graphics]
+vsync = true
+multiFrameContextEnabled = true
+gpuBasedValidationEnabled = false
+
+[Audio]
 enabled = true
-combineJoyCons = false
-verticalJoyCons = true
-backgroundInput = false
+masterVolume = 1
 
-[Input.Gamepad.JoyCon.Left]
-gyroscopeEnabled = true
-accelerometerEnabled = true
-
-[Input.Gamepad.JoyCon.Right]
-gyroscopeEnabled = true
-accelerometerEnabled = true
+[Window]
+title = Lazieal Sandbox
+width = 1280
+height = 720
+fullscreen = false
 ```
 
-`verticalJoyCons = true`は、左右のJoy-Conを両手に縦持ちする場合の設定です。
-Joy-Conを1本ずつ横持ちする場合は`false`に変更してください。
-`gyroscopeEnabled`と`accelerometerEnabled`は左右のJoy-Conごとに設定でき、
-`false`にすると対応するセンサーを有効化しません。設定を省略した場合は`true`です。
+同じファイルからゲームパッド、Joy-Con、スティックのデッドゾーン、モーションセンサーも設定できます。
 
-通常のゲームパッドはインデックスを指定して取得します。
+設定ファイルが存在しない場合はデフォルト値で生成されます。項目が追加された場合も、読み込み後に現在の形式へ更新されます。
+
+## Data Drivenな設定
+
+描画パイプラインは次のディレクトリにあるJSONから生成されます。
+
+```text
+Dependencies/LaziealRuntime/Dependencies/LaziealGraphicsFramework/Project/Assets/JsonData/Pipeline
+```
+
+ゲーム固有のパラメータは`LGF::Parameter`または`LGF::ParameterDocument`でJSONから読み込めます。
 
 ```cpp
-const LGF::Gamepad gamepad{ 0 };
-if (gamepad.IsConnected() && gamepad.HasGyroscope()) {
-    const LGF::Vector3 angularVelocity = gamepad.Gyroscope();
-    const LGF::Vector3 frameRotation = gamepad.RotationDelta();
-}
+const float speed = LGF::Parameter::GetOr<float>(
+    "Player.json",
+    "Movement/Speed",
+    1.0f);
 ```
 
-ジャイロの角速度はrad/s、加速度はm/s²、`RotationDelta()`は
-センサー値から積分した1フレーム分の回転量をラジアンで返します。
+対応する型は`bool`、`int32_t`、`float`、`Vector2`、`Vector3`、`Vector4`、`std::string`です。
 
-左右別のJoy-Conは専用APIから取得できます。未接続時は`std::nullopt`を返します。
-同じ側を複数接続した場合は`playerIndex`で選択できます。
+パラメータの作成と編集には、LaziealRuntimeに含まれる`LaziealParameterEditor`を使用できます。
 
-```cpp
-if (const auto left = LGF::JoyCon::Left()) {
-    const LGF::Vector3 leftGyro = left->Gyroscope();
-}
+## ディレクトリ
 
-if (const auto right = LGF::JoyCon::Right()) {
-    const LGF::Vector3 rightGyro = right->Gyroscope();
-}
+```text
+LaziealSandbox
+├─ Project
+│  ├─ Assets              Sandbox用アセット
+│  ├─ Src                 Sandboxのソースコード
+│  ├─ RuntimeSetting.ini  起動設定
+│  └─ Premake             プロジェクト生成設定
+├─ Dependencies
+│  └─ LaziealRuntime
+│     └─ Dependencies
+│        └─ LaziealGraphicsFramework
+├─ Tests                  テストコード
+├─ Tools                  開発用ツール
+└─ generated              ビルド生成物
 ```
 
-`combineJoyCons = true`で左右を合成した場合は、
-`GamepadSensorType::Left`と`GamepadSensorType::Right`を使って各IMUを選択できます。
+## 主な依存ライブラリ
 
-## Joy-Con検証シーン
+- DirectXTex
+- DirectXMesh
+- Dear ImGui
+- Assimp
+- nlohmann/json
+- SDL3
 
-起動直後にImGuiベースの`GamepadTestScene`が表示されます。
-接続中のゲームパッド、ボタン、スティック、ジャイロ、加速度、
-1フレーム分の回転量をリアルタイムで確認できます。
-
-- 青い3Dボックス: 左Joy-Conの姿勢
-- 赤い3Dボックス: 右Joy-Conの姿勢
-- `R`: 姿勢をリセット
-- `Escape`: 既存のサンプルシーンへ移動
-- Titleシーンで`G`: Joy-Con検証シーンへ戻る
-
-## ポイントライト検証シーン
-
-Titleシーンで`P`を押すと、`PointLightScene`へ移動します。
-赤、緑、青のポイントライトが白い球体と金属質のボックスの間を周回し、
-複数ライトの加算、位置による照明方向、距離減衰を確認できます。
-
-- `Space`: ライトの周回を一時停止・再開
-- `R`: ライトの周回位置をリセット
-- `Escape`: Titleシーンへ戻る
+各サンプルアセットの出典とライセンスは、アセットと同じディレクトリにある`SOURCE.md`やライセンスファイルを参照してください。
