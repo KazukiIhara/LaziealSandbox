@@ -13,7 +13,11 @@ namespace {
 	constexpr const char* kProfilePath = "Default.json";
 	constexpr const char* kBloomId = "MainBloom";
 	constexpr const char* kColorAdjustmentId = "SceneColor";
+	constexpr const char* kGrayscaleId = "Grayscale";
+	constexpr const char* kPixelationId = "Pixelation";
+	constexpr const char* kChromaticAberrationId = "ChromaticAberration";
 	constexpr const char* kVignetteId = "Vignette";
+	constexpr const char* kFXAAId = "FXAA";
 
 	Matrix4x4 MakeWorldMatrix(const Vector3& scale, const Vector3& translation) {
 		return Math::MakeAffineMatrix(
@@ -139,11 +143,29 @@ void PostProcessScene::DrawControlPanel() {
 	ImGui::ColorEdit4("Tint", &tint_.x);
 
 	ImGui::Separator();
+	ImGui::Checkbox("Grayscale", &grayscaleEnabled_);
+	ImGui::SliderFloat("Grayscale Intensity", &grayscaleIntensity_, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Checkbox("Pixelation", &pixelationEnabled_);
+	ImGui::SliderFloat("Pixel Size", &pixelSize_, 1.0f, 128.0f, "%.0f");
+
+	ImGui::Separator();
+	ImGui::Checkbox("Chromatic Aberration", &chromaticAberrationEnabled_);
+	ImGui::SliderFloat("Chromatic Aberration Intensity", &chromaticAberrationIntensity_, 0.0f, 32.0f);
+
+	ImGui::Separator();
 	ImGui::Checkbox("Vignette", &vignetteEnabled_);
 	ImGui::SliderFloat("Vignette Intensity", &vignetteIntensity_, 0.0f, 1.0f);
 	ImGui::SliderFloat("Vignette Smoothness", &vignetteSmoothness_, 0.001f, 1.0f);
 	ImGui::SliderFloat("Vignette Roundness", &vignetteRoundness_, 0.0f, 1.0f);
 	ImGui::ColorEdit4("Vignette Color", &vignetteColor_.x);
+
+	ImGui::Separator();
+	ImGui::Checkbox("FXAA", &fxaaEnabled_);
+	ImGui::SliderFloat("FXAA Edge Threshold", &fxaaEdgeThreshold_, 0.0312f, 0.333f);
+	ImGui::SliderFloat("FXAA Minimum Edge Threshold", &fxaaMinimumEdgeThreshold_, 0.0f, 0.0833f);
+	ImGui::SliderFloat("FXAA Blend Strength", &fxaaBlendStrength_, 0.0f, 1.0f);
 
 	ImGui::Separator();
 	ImGui::SliderFloat("Exposure EV", &exposureEV_, -5.0f, 5.0f);
@@ -168,11 +190,25 @@ void PostProcessScene::ApplyPostProcessSettings() {
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kColorAdjustmentId, "Intensity", colorAdjustmentIntensity_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kColorAdjustmentId, "Tint", tint_);
 
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kGrayscaleId, grayscaleEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kGrayscaleId, "Intensity", grayscaleIntensity_);
+
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kPixelationId, pixelationEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kPixelationId, "PixelSize", pixelSize_);
+
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kChromaticAberrationId, chromaticAberrationEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kChromaticAberrationId, "Intensity", chromaticAberrationIntensity_);
+
 	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kVignetteId, vignetteEnabled_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kVignetteId, "Intensity", vignetteIntensity_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kVignetteId, "Smoothness", vignetteSmoothness_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kVignetteId, "Roundness", vignetteRoundness_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kVignetteId, "Color", vignetteColor_);
+
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kFXAAId, fxaaEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kFXAAId, "EdgeThreshold", fxaaEdgeThreshold_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kFXAAId, "MinimumEdgeThreshold", fxaaMinimumEdgeThreshold_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kFXAAId, "BlendStrength", fxaaBlendStrength_);
 	Graphics3D::SetToneMappingParameter(postProcessProfile_, "ExposureEV", exposureEV_);
 }
 
@@ -188,11 +224,21 @@ void PostProcessScene::ResetPostProcessSettings() {
 	saturation_ = 1.0f;
 	colorAdjustmentIntensity_ = 1.0f;
 	tint_ = Color::White;
+	grayscaleEnabled_ = false;
+	grayscaleIntensity_ = 1.0f;
+	pixelationEnabled_ = false;
+	pixelSize_ = 8.0f;
+	chromaticAberrationEnabled_ = false;
+	chromaticAberrationIntensity_ = 2.0f;
 	vignetteEnabled_ = true;
 	vignetteIntensity_ = 0.25f;
 	vignetteSmoothness_ = 0.5f;
 	vignetteRoundness_ = 1.0f;
 	vignetteColor_ = Color::Black;
+	fxaaEnabled_ = true;
+	fxaaEdgeThreshold_ = 0.125f;
+	fxaaMinimumEdgeThreshold_ = 0.0312f;
+	fxaaBlendStrength_ = 0.75f;
 	exposureEV_ = 0.0f;
 	Graphics3D::ClearPostProcessOverrides(postProcessProfile_);
 }

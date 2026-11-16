@@ -41,10 +41,24 @@ private:
 	float colorAdjustmentIntensity_ = 1.0f;
 	LGF::Vector4 tint_ = LGF::Color::White;
 
+	bool grayscaleEnabled_ = false;
+	float grayscaleIntensity_ = 1.0f;
+
+	bool pixelationEnabled_ = false;
+	float pixelSize_ = 8.0f;
+
+	bool chromaticAberrationEnabled_ = false;
+	float chromaticAberrationIntensity_ = 2.0f;
+
 	bool vignetteEnabled_ = true;
 	float vignetteIntensity_ = 0.25f;
 	float vignetteSmoothness_ = 0.5f;
 	float vignetteRoundness_ = 1.0f;
 	LGF::Vector4 vignetteColor_ = LGF::Color::Black;
+
+	bool fxaaEnabled_ = true;
+	float fxaaEdgeThreshold_ = 0.125f;
+	float fxaaMinimumEdgeThreshold_ = 0.0312f;
+	float fxaaBlendStrength_ = 0.75f;
 	float exposureEV_ = 0.0f;
 };
