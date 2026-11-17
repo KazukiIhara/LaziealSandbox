@@ -44,8 +44,33 @@ private:
 	bool grayscaleEnabled_ = false;
 	float grayscaleIntensity_ = 1.0f;
 
+	bool posterizationEnabled_ = false;
+	float posterizationColorSteps_ = 8.0f;
+	float posterizationIntensity_ = 1.0f;
+
+	bool sepiaEnabled_ = false;
+	float sepiaIntensity_ = 1.0f;
+
+	bool colorInversionEnabled_ = false;
+	float colorInversionIntensity_ = 1.0f;
+
+	bool lensDistortionEnabled_ = false;
+	float lensDistortion_ = 0.15f;
+	float lensDistortionScale_ = 1.0f;
+	LGF::Vector2 lensDistortionCenter_ = { 0.5f, 0.5f };
+
+	bool radialBlurEnabled_ = false;
+	LGF::Vector2 radialBlurCenter_ = { 0.5f, 0.5f };
+	float radialBlurStrength_ = 0.08f;
+	float radialBlurSampleCount_ = 12.0f;
+
 	bool pixelationEnabled_ = false;
 	float pixelSize_ = 8.0f;
+
+	bool orderedDitheringEnabled_ = false;
+	float orderedDitheringColorSteps_ = 8.0f;
+	float orderedDitheringIntensity_ = 1.0f;
+	float orderedDitheringScale_ = 1.0f;
 
 	bool chromaticAberrationEnabled_ = false;
 	float chromaticAberrationIntensity_ = 2.0f;
@@ -60,5 +85,10 @@ private:
 	float fxaaEdgeThreshold_ = 0.125f;
 	float fxaaMinimumEdgeThreshold_ = 0.0312f;
 	float fxaaBlendStrength_ = 0.75f;
+
+	bool sharpenEnabled_ = false;
+	float sharpenIntensity_ = 0.5f;
+	float sharpenThreshold_ = 0.02f;
+
 	float exposureEV_ = 0.0f;
 };

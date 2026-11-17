@@ -1,11 +1,11 @@
 #include <LGF/LGF.h>
 
-#include "Scene/PostProcessScene.h"
+#include "Scene/ToonLightingScene.h"
 
 using namespace LGF;
 
 void Main() {
-	PostProcessScene scene;
+	ToonLightingScene scene;
 
 	while (System::Update()) {
 		scene.Update();

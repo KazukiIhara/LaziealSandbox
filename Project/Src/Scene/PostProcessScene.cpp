@@ -14,9 +14,16 @@ namespace {
 	constexpr const char* kBloomId = "MainBloom";
 	constexpr const char* kColorAdjustmentId = "SceneColor";
 	constexpr const char* kGrayscaleId = "Grayscale";
+	constexpr const char* kPosterizationId = "Posterization";
+	constexpr const char* kSepiaId = "Sepia";
+	constexpr const char* kColorInversionId = "ColorInversion";
+	constexpr const char* kLensDistortionId = "LensDistortion";
+	constexpr const char* kRadialBlurId = "RadialBlur";
 	constexpr const char* kPixelationId = "Pixelation";
+	constexpr const char* kOrderedDitheringId = "OrderedDithering";
 	constexpr const char* kChromaticAberrationId = "ChromaticAberration";
 	constexpr const char* kVignetteId = "Vignette";
+	constexpr const char* kSharpenId = "Sharpen";
 	constexpr const char* kFXAAId = "FXAA";
 
 	Matrix4x4 MakeWorldMatrix(const Vector3& scale, const Vector3& translation) {
@@ -147,8 +154,39 @@ void PostProcessScene::DrawControlPanel() {
 	ImGui::SliderFloat("Grayscale Intensity", &grayscaleIntensity_, 0.0f, 1.0f);
 
 	ImGui::Separator();
+	ImGui::Checkbox("Posterization", &posterizationEnabled_);
+	ImGui::SliderFloat("Posterization Color Steps", &posterizationColorSteps_, 2.0f, 64.0f, "%.0f");
+	ImGui::SliderFloat("Posterization Intensity", &posterizationIntensity_, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Checkbox("Sepia", &sepiaEnabled_);
+	ImGui::SliderFloat("Sepia Intensity", &sepiaIntensity_, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Checkbox("Color Inversion", &colorInversionEnabled_);
+	ImGui::SliderFloat("Color Inversion Intensity", &colorInversionIntensity_, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Checkbox("Lens Distortion", &lensDistortionEnabled_);
+	ImGui::SliderFloat("Lens Distortion Amount", &lensDistortion_, -1.0f, 1.0f);
+	ImGui::SliderFloat("Lens Distortion Scale", &lensDistortionScale_, 0.5f, 2.0f);
+	ImGui::SliderFloat2("Lens Distortion Center", &lensDistortionCenter_.x, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Checkbox("Radial Blur", &radialBlurEnabled_);
+	ImGui::SliderFloat2("Radial Blur Center", &radialBlurCenter_.x, 0.0f, 1.0f);
+	ImGui::SliderFloat("Radial Blur Strength", &radialBlurStrength_, -0.25f, 0.25f);
+	ImGui::SliderFloat("Radial Blur Sample Count", &radialBlurSampleCount_, 2.0f, 32.0f, "%.0f");
+
+	ImGui::Separator();
 	ImGui::Checkbox("Pixelation", &pixelationEnabled_);
 	ImGui::SliderFloat("Pixel Size", &pixelSize_, 1.0f, 128.0f, "%.0f");
+
+	ImGui::Separator();
+	ImGui::Checkbox("Ordered Dithering", &orderedDitheringEnabled_);
+	ImGui::SliderFloat("Dithering Color Steps", &orderedDitheringColorSteps_, 2.0f, 64.0f, "%.0f");
+	ImGui::SliderFloat("Dithering Intensity", &orderedDitheringIntensity_, 0.0f, 1.0f);
+	ImGui::SliderFloat("Dithering Scale", &orderedDitheringScale_, 1.0f, 8.0f, "%.0f");
 
 	ImGui::Separator();
 	ImGui::Checkbox("Chromatic Aberration", &chromaticAberrationEnabled_);
@@ -160,6 +198,11 @@ void PostProcessScene::DrawControlPanel() {
 	ImGui::SliderFloat("Vignette Smoothness", &vignetteSmoothness_, 0.001f, 1.0f);
 	ImGui::SliderFloat("Vignette Roundness", &vignetteRoundness_, 0.0f, 1.0f);
 	ImGui::ColorEdit4("Vignette Color", &vignetteColor_.x);
+
+	ImGui::Separator();
+	ImGui::Checkbox("Sharpen", &sharpenEnabled_);
+	ImGui::SliderFloat("Sharpen Intensity", &sharpenIntensity_, 0.0f, 2.0f);
+	ImGui::SliderFloat("Sharpen Threshold", &sharpenThreshold_, 0.0f, 1.0f);
 
 	ImGui::Separator();
 	ImGui::Checkbox("FXAA", &fxaaEnabled_);
@@ -193,8 +236,33 @@ void PostProcessScene::ApplyPostProcessSettings() {
 	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kGrayscaleId, grayscaleEnabled_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kGrayscaleId, "Intensity", grayscaleIntensity_);
 
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kPosterizationId, posterizationEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kPosterizationId, "ColorSteps", posterizationColorSteps_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kPosterizationId, "Intensity", posterizationIntensity_);
+
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kSepiaId, sepiaEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kSepiaId, "Intensity", sepiaIntensity_);
+
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kColorInversionId, colorInversionEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kColorInversionId, "Intensity", colorInversionIntensity_);
+
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kLensDistortionId, lensDistortionEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kLensDistortionId, "Distortion", lensDistortion_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kLensDistortionId, "Scale", lensDistortionScale_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kLensDistortionId, "Center", lensDistortionCenter_);
+
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kRadialBlurId, radialBlurEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kRadialBlurId, "Center", radialBlurCenter_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kRadialBlurId, "Strength", radialBlurStrength_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kRadialBlurId, "SampleCount", radialBlurSampleCount_);
+
 	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kPixelationId, pixelationEnabled_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kPixelationId, "PixelSize", pixelSize_);
+
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kOrderedDitheringId, orderedDitheringEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kOrderedDitheringId, "ColorSteps", orderedDitheringColorSteps_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kOrderedDitheringId, "Intensity", orderedDitheringIntensity_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kOrderedDitheringId, "Scale", orderedDitheringScale_);
 
 	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kChromaticAberrationId, chromaticAberrationEnabled_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kChromaticAberrationId, "Intensity", chromaticAberrationIntensity_);
@@ -204,6 +272,10 @@ void PostProcessScene::ApplyPostProcessSettings() {
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kVignetteId, "Smoothness", vignetteSmoothness_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kVignetteId, "Roundness", vignetteRoundness_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kVignetteId, "Color", vignetteColor_);
+
+	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kSharpenId, sharpenEnabled_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kSharpenId, "Intensity", sharpenIntensity_);
+	Graphics3D::SetPostProcessParameter(postProcessProfile_, kSharpenId, "Threshold", sharpenThreshold_);
 
 	Graphics3D::SetPostProcessEffectEnabled(postProcessProfile_, kFXAAId, fxaaEnabled_);
 	Graphics3D::SetPostProcessParameter(postProcessProfile_, kFXAAId, "EdgeThreshold", fxaaEdgeThreshold_);
@@ -226,8 +298,27 @@ void PostProcessScene::ResetPostProcessSettings() {
 	tint_ = Color::White;
 	grayscaleEnabled_ = false;
 	grayscaleIntensity_ = 1.0f;
+	posterizationEnabled_ = false;
+	posterizationColorSteps_ = 8.0f;
+	posterizationIntensity_ = 1.0f;
+	sepiaEnabled_ = false;
+	sepiaIntensity_ = 1.0f;
+	colorInversionEnabled_ = false;
+	colorInversionIntensity_ = 1.0f;
+	lensDistortionEnabled_ = false;
+	lensDistortion_ = 0.15f;
+	lensDistortionScale_ = 1.0f;
+	lensDistortionCenter_ = { 0.5f, 0.5f };
+	radialBlurEnabled_ = false;
+	radialBlurCenter_ = { 0.5f, 0.5f };
+	radialBlurStrength_ = 0.08f;
+	radialBlurSampleCount_ = 12.0f;
 	pixelationEnabled_ = false;
 	pixelSize_ = 8.0f;
+	orderedDitheringEnabled_ = false;
+	orderedDitheringColorSteps_ = 8.0f;
+	orderedDitheringIntensity_ = 1.0f;
+	orderedDitheringScale_ = 1.0f;
 	chromaticAberrationEnabled_ = false;
 	chromaticAberrationIntensity_ = 2.0f;
 	vignetteEnabled_ = true;
@@ -239,6 +330,9 @@ void PostProcessScene::ResetPostProcessSettings() {
 	fxaaEdgeThreshold_ = 0.125f;
 	fxaaMinimumEdgeThreshold_ = 0.0312f;
 	fxaaBlendStrength_ = 0.75f;
+	sharpenEnabled_ = false;
+	sharpenIntensity_ = 0.5f;
+	sharpenThreshold_ = 0.02f;
 	exposureEV_ = 0.0f;
 	Graphics3D::ClearPostProcessOverrides(postProcessProfile_);
 }
