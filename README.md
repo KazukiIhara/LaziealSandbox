@@ -30,6 +30,7 @@ DirectX 12とC++20で開発している自作ゲームフレームワークの�
 - Sprite、2D・3Dフォント、Dear ImGui
 - 任意のRender Targetへ描画するカスタムRenderPass
 - CPU・GPUパーティクル
+- Effekseerエフェクトの同期読み込み、再生、停止、Transform変更
 - JSONからのGraphics Pipeline、Compute Pipeline生成
 
 ### ランタイム
@@ -50,6 +51,7 @@ DirectX 12とC++20で開発している自作ゲームフレームワークの�
 - Visual Studio 2022またはVisual Studio 2026
 - C++20対応MSVCツールセット
 - Windows SDKとDirectX Shader Compiler
+- Visual StudioのC++ CMakeツール（初回のEffekseerライブラリ生成に使用）
 - DirectX 12対応GPU
   - Mesh Shader Tier 1以上
   - Shader Model 6.6以上
@@ -193,5 +195,6 @@ LaziealSandbox
 - Assimp
 - nlohmann/json
 - SDL3
+- Effekseer 1.80.8
 
 各サンプルアセットの出典とライセンスは、アセットと同じディレクトリにある`SOURCE.md`やライセンスファイルを参照してください。

@@ -9,6 +9,8 @@ workspace "LaziealSandbox"
 
 local graphicsProject = "../../Dependencies/LaziealRuntime/Dependencies/LaziealGraphicsFramework/Project"
 local sdlRoot = "../../Dependencies/LaziealRuntime/Dependencies/SDL3"
+local effekseerInstall = graphicsProject .. "/Externals/Effekseer/install_" ..
+    ((_ACTION == "vs2022") and "msvc2022_x64" or "msvc2026_x64")
 
 externalproject "DirectXTex"
     location (graphicsProject)
@@ -83,7 +85,10 @@ project "LaziealSandbox"
         "SDL3",
     }
 
-    libdirs { sdlRoot .. "/lib/x64" }
+    libdirs {
+        sdlRoot .. "/lib/x64",
+        effekseerInstall .. "/lib",
+    }
 
     defines { "NOMINMAX" }
     warnings "High"
@@ -107,6 +112,13 @@ project "LaziealSandbox"
         linkoptions { "/IGNORE:4049", "/IGNORE:4099" }
         libdirs { graphicsProject .. "/Externals/assimp/lib/Debug" }
         links { "assimp-vc143-mtd" }
+        links {
+            "EffekseerRendererDX12d",
+            "EffekseerRendererLLGId",
+            "EffekseerRendererCommond",
+            "Effekseerd",
+            "LLGId",
+        }
 
     filter "configurations:Develop"
         defines { "DEBUG", "DEVELOP" }
@@ -117,6 +129,13 @@ project "LaziealSandbox"
         linkoptions { "/IGNORE:4049", "/IGNORE:4099" }
         libdirs { graphicsProject .. "/Externals/assimp/lib/Release" }
         links { "assimp-vc143-mt" }
+        links {
+            "EffekseerRendererDX12",
+            "EffekseerRendererLLGI",
+            "EffekseerRendererCommon",
+            "Effekseer",
+            "LLGI",
+        }
 
     filter "configurations:Release"
         defines { "NDEBUG" }
@@ -125,5 +144,12 @@ project "LaziealSandbox"
         linkoptions { "/IGNORE:4049", "/IGNORE:4099" }
         libdirs { graphicsProject .. "/Externals/assimp/lib/Release" }
         links { "assimp-vc143-mt" }
+        links {
+            "EffekseerRendererDX12",
+            "EffekseerRendererLLGI",
+            "EffekseerRendererCommon",
+            "Effekseer",
+            "LLGI",
+        }
 
     filter {}
