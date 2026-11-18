@@ -10,7 +10,7 @@ using namespace LGF;
 namespace {
 
 	constexpr const char* kEffectPath =
-		"Effects/Effekseer/Laser01.efkefc";
+		"Assets/Effects/Effekseer/Laser01.efkefc";
 
 	enum class EffectCommand {
 		None,
@@ -18,12 +18,8 @@ namespace {
 		Stop,
 	};
 
-	Transform3D MakeEffectTransform(
-		const Vector3& basePosition,
-		float scale,
-		float rotationY,
-		float elapsedTime,
-		bool animate) {
+	Transform3D MakeEffectTransform(const Vector3& basePosition, float scale, float rotationY, float elapsedTime, bool animate) {
+
 		Transform3D transform{};
 		const float animatedRotationY = rotationY +
 			(animate ? elapsedTime * 45.0f * Math::DEG_TO_RAD : 0.0f);
@@ -32,7 +28,7 @@ namespace {
 			0.0f,
 			animatedRotationY,
 			0.0f,
-		});
+			});
 		transform.translation = basePosition;
 		if (animate) {
 			transform.translation.x += std::sin(elapsedTime) * 3.0f;
