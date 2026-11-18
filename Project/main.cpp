@@ -19,7 +19,6 @@ namespace {
 	};
 
 	Transform3D MakeEffectTransform(const Vector3& basePosition, float scale, float rotationY, float elapsedTime, bool animate) {
-
 		Transform3D transform{};
 		const float animatedRotationY = rotationY +
 			(animate ? elapsedTime * 45.0f * Math::DEG_TO_RAD : 0.0f);
@@ -37,13 +36,7 @@ namespace {
 		return transform;
 	}
 
-	EffectCommand DrawControlPanel(
-		Vector3& position,
-		float& scale,
-		float& rotationY,
-		bool& animate,
-		bool& autoReplay,
-		bool isPlaying) {
+	EffectCommand DrawControlPanel(Vector3& position, float& scale, float& rotationY, bool& animate, bool& autoReplay, bool isPlaying) {
 		EffectCommand command = EffectCommand::None;
 		if (!ImGui::Begin("Effekseer Effect")) {
 			ImGui::End();
