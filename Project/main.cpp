@@ -1,154 +1,161 @@
 #include <LGF/LGF.h>
 
 #include <cmath>
-#include <stdexcept>
-
-#include <imgui.h>
+#include <memory>
 
 using namespace LGF;
 
 namespace {
 
-	constexpr const char* kEffectPath =
-		"Assets/Effects/Effekseer/Laser01.efkefc";
+	constexpr const char* kFontPath =
+		"Assets/Fonts/NotoSansJP/NotoSansJP-wght.ttf";
+	constexpr const char* kFadeBlackPath =
+		"../Dependencies/LaziealRuntime/Dependencies/LaziealGraphicsFramework/Project/Assets/"
+		"JsonData/SceneTransition/FadeBlack.json";
+	constexpr const char* kHorizontalWipePath =
+		"../Dependencies/LaziealRuntime/Dependencies/LaziealGraphicsFramework/Project/Assets/"
+		"JsonData/SceneTransition/HorizontalWipe.json";
 
-	enum class EffectCommand {
-		None,
-		Restart,
-		Stop,
+	enum class DemoSceneState {
+		Blue,
+		Orange,
 	};
 
-	Transform3D MakeEffectTransform(const Vector3& basePosition, float scale, float rotationY, float elapsedTime, bool animate) {
-		Transform3D transform{};
-		const float animatedRotationY = rotationY +
-			(animate ? elapsedTime * 45.0f * Math::DEG_TO_RAD : 0.0f);
-		transform.scale = { scale, scale, scale };
-		transform.rotation = Math::MakeQuaternion({
-			0.0f,
-			animatedRotationY,
-			0.0f,
+	struct DemoSceneData {
+		Font2D titleFont{ kFontPath, 64u };
+		Font2D textFont{ kFontPath, 24u };
+	};
+
+	using DemoScene = IScene<DemoSceneState, DemoSceneData>;
+
+	void DrawInstructions(const DemoSceneData& data, const Vector2& screenCenter, const Vector4& color) {
+		data.textFont.Draw(
+			"SPACE : FadeBlack",
+			{ screenCenter.x, screenCenter.y + 100.0f },
+			Font2DDrawOptions{
+				.color = color,
+				.anchor = { 0.5f, 0.5f },
 			});
-		transform.translation = basePosition;
-		if (animate) {
-			transform.translation.x += std::sin(elapsedTime) * 3.0f;
-			transform.translation.z += std::cos(elapsedTime) * 3.0f;
-		}
-		return transform;
+		data.textFont.Draw(
+			"ENTER : HorizontalWipe",
+			{ screenCenter.x, screenCenter.y + 138.0f },
+			Font2DDrawOptions{
+				.color = color,
+				.anchor = { 0.5f, 0.5f },
+			});
 	}
 
-	EffectCommand DrawControlPanel(Vector3& position, float& scale, float& rotationY, bool& animate, bool& autoReplay, bool isPlaying) {
-		EffectCommand command = EffectCommand::None;
-		if (!ImGui::Begin("Effekseer Effect")) {
-			ImGui::End();
-			return command;
+	class BlueScene final : public DemoScene {
+	public:
+		using DemoScene::DemoScene;
+
+		void Update() override {
+			elapsedTime_ += static_cast<float>(System::DeltaTime());
+			if (Key::Space.Trigger()) {
+				ChangeScene(DemoSceneState::Orange, "FadeBlack");
+			} else if (Key::Enter.Trigger()) {
+				ChangeScene(DemoSceneState::Orange, "HorizontalWipe");
+			}
 		}
 
-		ImGui::TextUnformatted("Arrow keys: orbit camera   Q / E: distance");
-		ImGui::Text("State: %s", isPlaying ? "Playing" : "Stopped");
-		ImGui::Separator();
+		void Draw() const override {
+			const Vector2 screenSize{
+				static_cast<float>(Graphics2D::GetWindowWidth()),
+				static_cast<float>(Graphics2D::GetWindowHeight()),
+			};
+			const Vector2 screenCenter = screenSize * 0.5f;
+			Rect2D{ {}, screenSize }.Draw(Vector4{ 0.03f, 0.12f, 0.2f, 1.0f });
 
-		if (ImGui::Button("Restart")) {
-			command = EffectCommand::Restart;
+			const float orbit = elapsedTime_ * 1.5f;
+			Circle2D{
+				{
+					screenCenter.x + std::cos(orbit) * 230.0f,
+					screenCenter.y + std::sin(orbit) * 90.0f,
+				},
+				72.0f,
+			}.Draw(Vector4{ 0.1f, 0.75f, 1.0f, 0.75f });
+			Circle2D{
+				{
+					screenCenter.x + std::cos(orbit + Math::PI) * 230.0f,
+					screenCenter.y + std::sin(orbit + Math::PI) * 90.0f,
+				},
+				48.0f,
+			}.Draw(Vector4{ 0.35f, 1.0f, 0.8f, 0.65f });
+
+			GetData().titleFont.Draw(
+				"SCENE BLUE",
+				screenCenter,
+				Font2DDrawOptions{
+					.color = Color::White,
+					.anchor = { 0.5f, 0.5f },
+				});
+			DrawInstructions(GetData(), screenCenter, { 0.65f, 0.9f, 1.0f, 1.0f });
 		}
-		ImGui::SameLine();
-		if (ImGui::Button("Stop")) {
-			command = EffectCommand::Stop;
+
+	private:
+		float elapsedTime_ = 0.0f;
+	};
+
+	class OrangeScene final : public DemoScene {
+	public:
+		using DemoScene::DemoScene;
+
+		void Update() override {
+			elapsedTime_ += static_cast<float>(System::DeltaTime());
+			if (Key::Space.Trigger()) {
+				ChangeScene(DemoSceneState::Blue, "FadeBlack");
+			} else if (Key::Enter.Trigger()) {
+				ChangeScene(DemoSceneState::Blue, "HorizontalWipe");
+			}
 		}
 
-		ImGui::Checkbox("Auto Replay", &autoReplay);
-		ImGui::Checkbox("Animate Transform", &animate);
-		ImGui::DragFloat3("Position", &position.x, 0.05f);
-		ImGui::SliderFloat("Scale", &scale, 0.1f, 3.0f);
-		ImGui::SliderAngle("Rotation Y", &rotationY);
+		void Draw() const override {
+			const Vector2 screenSize{
+				static_cast<float>(Graphics2D::GetWindowWidth()),
+				static_cast<float>(Graphics2D::GetWindowHeight()),
+			};
+			const Vector2 screenCenter = screenSize * 0.5f;
+			Rect2D{ {}, screenSize }.Draw(Vector4{ 0.24f, 0.06f, 0.03f, 1.0f });
 
-		ImGui::End();
-		return command;
-	}
+			const float movement = std::sin(elapsedTime_ * 2.0f) * 120.0f;
+			RoundRect2D{
+				{ screenCenter.x - 310.0f + movement, screenCenter.y - 190.0f },
+				{ 180.0f, 90.0f },
+				24.0f,
+			}.Draw(Vector4{ 1.0f, 0.35f, 0.08f, 0.8f });
+			RoundRect2D{
+				{ screenCenter.x + 130.0f - movement, screenCenter.y + 100.0f },
+				{ 180.0f, 90.0f },
+				24.0f,
+			}.Draw(Vector4{ 1.0f, 0.7f, 0.12f, 0.75f });
+
+			GetData().titleFont.Draw(
+				"SCENE ORANGE",
+				screenCenter,
+				Font2DDrawOptions{
+					.color = Color::White,
+					.anchor = { 0.5f, 0.5f },
+				});
+			DrawInstructions(GetData(), screenCenter, { 1.0f, 0.82f, 0.58f, 1.0f });
+		}
+
+	private:
+		float elapsedTime_ = 0.0f;
+	};
 
 }
 
 void Main() {
-	DebugCamera3D camera(20.0f);
-	DirectionalLight directionalLight(
-		{ -0.5f, -1.0f, 0.3f },
-		Color::White,
-		1.5f);
-	Ground3D ground(30.0f, 30.0f);
-	Grid3D grid(24.0f, 1.0f);
-
-	VFX::EffectWorld effectWorld;
-	VFX::Effect effect = effectWorld.Load(kEffectPath);
-	if (!effect.IsValid()) {
-		throw std::runtime_error("Failed to load the Effekseer sample effect.");
-	}
-
-	Vector3 effectPosition{ 0.0f, 0.0f, 0.0f };
-	float effectScale = 1.0f;
-	float effectRotationY{};
-	float elapsedTime{};
-	bool animateTransform = true;
-	bool autoReplay = true;
-
-	Transform3D effectTransform = MakeEffectTransform(
-		effectPosition,
-		effectScale,
-		effectRotationY,
-		elapsedTime,
-		animateTransform);
-	VFX::EffectHandle effectHandle = effectWorld.Play(effect, effectTransform);
-	if (!effectHandle.IsValid()) {
-		throw std::runtime_error("Failed to play the Effekseer sample effect.");
-	}
-
-	Graphics3D::ResetPostProcessProfile();
-	Graphics3D::SetExposure(0.0f);
+	auto data = std::make_shared<DemoSceneData>();
+	SceneManager<DemoSceneState, DemoSceneData> sceneManager(data);
+	sceneManager
+		.Register<BlueScene>(DemoSceneState::Blue)
+		.Register<OrangeScene>(DemoSceneState::Orange);
+	sceneManager.RegisterTransition("FadeBlack", LoadSceneTransition(kFadeBlackPath));
+	sceneManager.RegisterTransition("HorizontalWipe", LoadSceneTransition(kHorizontalWipePath));
 
 	while (System::Update()) {
-		const float deltaTime = static_cast<float>(System::DeltaTime());
-		elapsedTime += deltaTime;
-
-		camera.Update();
-		effectWorld.Update(deltaTime);
-
-		const bool isPlaying = effectWorld.IsPlaying(effectHandle);
-		const EffectCommand command = DrawControlPanel(
-			effectPosition,
-			effectScale,
-			effectRotationY,
-			animateTransform,
-			autoReplay,
-			isPlaying);
-
-		effectTransform = MakeEffectTransform(
-			effectPosition,
-			effectScale,
-			effectRotationY,
-			elapsedTime,
-			animateTransform);
-
-		if (command == EffectCommand::Stop) {
-			effectWorld.Stop(effectHandle);
-			autoReplay = false;
-		} else if (command == EffectCommand::Restart) {
-			effectWorld.Stop(effectHandle);
-			effectHandle = effectWorld.Play(effect, effectTransform);
-		} else if (!isPlaying && autoReplay) {
-			effectHandle = effectWorld.Play(effect, effectTransform);
-		}
-
-		if (effectWorld.IsPlaying(effectHandle)) {
-			effectWorld.SetTransform(effectHandle, effectTransform);
-		}
-
-		camera.SetScene();
-		directionalLight.SetScene();
-		ground.Draw(
-			Math::MakeTranslateMatrix({ 0.0f, -2.0f, 0.0f }),
-			Material3D{
-				.color = { 0.12f, 0.14f, 0.18f, 1.0f },
-				.metallic = 0.1f,
-				.roughness = 0.75f,
-			});
-		grid.Draw(Math::MakeTranslateMatrix({ 0.0f, -1.98f, 0.0f }));
+		sceneManager.Update();
+		sceneManager.Draw();
 	}
 }
