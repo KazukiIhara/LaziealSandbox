@@ -71,9 +71,8 @@ private:
 	LGF::Font2D uiFont_;
 	LGF::Font3D worldFont_;
 	LGF::Texture checkerTexture_;
-	LGF::Sprite checkerSprite_;
 	LGF::UIWorld uiWorld_;
-	LGF::UIPanel3D uiPanel3D_;
+	LGF::UIHandle screenCanvas_{};
 	LGF::UIButtonHandle spawnButton_{};
 	LGF::UIButtonHandle effectButton_{};
 	LGF::UIButtonHandle worldButton_{};

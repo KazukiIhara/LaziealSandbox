@@ -66,8 +66,6 @@ ShowcaseScene::ShowcaseScene() :
 	uiFont_(kFontPath, 18u),
 	worldFont_(kFontPath, 48u),
 	checkerTexture_(kCheckerTexturePath),
-	checkerSprite_(checkerTexture_, { 24.0f, 0.0f }, { 96.0f, 96.0f }),
-	uiPanel3D_(2.8f, 0.85f),
 	particleWorld_(VFX::LoadParticleWorldSettings(kParticleWorldPath)),
 	gpuParticleWorld_(VFX::LoadParticleWorldSettings(kParticleWorldPath)),
 	pointLightIntensity_(Parameter::GetOr<float>("ShowcaseScene.json", "Lighting/PointIntensity", 24.0f)),
@@ -162,8 +160,53 @@ void ShowcaseScene::InitializeInput() {
 }
 
 void ShowcaseScene::InitializeUI() {
-	// anchorは画面上の基準位置、pivotはボタン自身の基準位置です。
+	// UIWorldへカメラを登録すると、World CanvasのBillboard系表示も同じAPIで扱えます。
+	// FixedなCanvasでも、3D Labelの回転とパネル表面への深度オフセットはUIWorldが解決します。
+	uiWorld_.SetCamera(&camera_);
+
+	// CanvasがScreen / Worldの空間を決めます。子要素側は低レベルな描画クラスを直接呼びません。
+	screenCanvas_ = uiWorld_.AddCanvas({ .space = UICanvasSpace::Screen });
+	const UIHandle informationPanel = uiWorld_.AddPanel({
+		.element = { .parent = screenCanvas_ },
+		.transform = {
+			.position = { 18.0f, -150.0f },
+			.size = { 360.0f, 132.0f },
+			.anchor = { 0.0f, 1.0f },
+		},
+		.color = { 0.025f, 0.04f, 0.075f, 0.88f },
+	});
+	uiWorld_.AddImage({
+		.element = { .parent = informationPanel },
+		.transform = { .position = { 12.0f, 18.0f }, .size = { 96.0f, 96.0f } },
+		.texture = checkerTexture_,
+	});
+	uiWorld_.AddLabel({
+		.element = { .parent = informationPanel },
+		.text = "2D / Image / Label",
+		.transform = { .position = { 167.0f, 26.0f } },
+		.font = titleFont_,
+		.textAnchor = {},
+	});
+	uiWorld_.AddLabel({
+		.element = { .parent = informationPanel },
+		.text = "SPACE: Physics   V: VFX",
+		.transform = { .position = { 167.0f, 72.0f } },
+		.font = uiFont_,
+		.color = Color::LightGray,
+		.textAnchor = {},
+	});
+	uiWorld_.AddLabel({
+		.element = { .parent = informationPanel },
+		.text = "TAB: UI navigation",
+		.transform = { .position = { 167.0f, 100.0f } },
+		.font = uiFont_,
+		.color = Color::LightGray,
+		.textAnchor = {},
+	});
+
+	// anchorはCanvas上の基準位置、pivotはボタン自身の基準位置です。
 	spawnButton_ = uiWorld_.AddButton({
+		.element = { .parent = screenCanvas_ },
 		.text = "Spawn physics ball",
 		.transform = {
 			.position = { -24.0f, -104.0f },
@@ -171,10 +214,12 @@ void ShowcaseScene::InitializeUI() {
 			.anchor = { 1.0f, 1.0f },
 			.pivot = { 1.0f, 1.0f },
 		},
+		.font = uiFont_,
 		.shortcutCommand = kSpawnCommand,
 		.isNavigationEnabled = true,
 	});
 	effectButton_ = uiWorld_.AddButton({
+		.element = { .parent = screenCanvas_ },
 		.text = "Play Effekseer",
 		.transform = {
 			.position = { -24.0f, -58.0f },
@@ -182,16 +227,23 @@ void ShowcaseScene::InitializeUI() {
 			.anchor = { 1.0f, 1.0f },
 			.pivot = { 1.0f, 1.0f },
 		},
+		.font = uiFont_,
 		.shortcutCommand = kEffectCommand,
 		.isNavigationEnabled = true,
 	});
-	worldButton_ = uiWorld_.AddButton3D({
-		.text = "3D UI",
-		.transform = {
+	const UIHandle worldCanvas = uiWorld_.AddCanvas({
+		.space = UICanvasSpace::World,
+		.transform3D = {
 			.position = { 5.5f, 2.8f, 3.5f },
-			.size = { 2.8f, 0.85f },
-			.rotation = Math::MakeRotateAxisAngle({ 0.0f, 1.0f, 0.0f }, Math::PI),
 		},
+	});
+	worldButton_ = uiWorld_.AddButton({
+		.element = { .parent = worldCanvas },
+		.text = "3D UI",
+		.transform3D = {
+			.size = { 2.8f, 0.85f },
+		},
+		.font3D = worldFont_,
 		.isNavigationEnabled = true,
 	});
 	uiWorld_.SetSelected(spawnButton_);
@@ -242,6 +294,8 @@ void ShowcaseScene::InitializePostProcess() {
 }
 
 void ShowcaseScene::UpdateUI() {
+	// 親Canvasの表示状態は、デフォルト設定のまま子要素へまとめて継承されます。
+	uiWorld_.SetVisible(screenCanvas_, show2DOverlay_);
 	UIWorldInput input{
 		.cursorPosition = Cursor::Pos(),
 		.isCursorPressed = Mouse::Left.Press(),
@@ -366,7 +420,8 @@ void ShowcaseScene::DrawWorld() {
 			.anchor = { 0.5f, 0.5f },
 			.worldUnitsPerPixel = 0.012f,
 		});
-	uiWorld_.Draw3D(uiPanel3D_, worldFont_);
+	// Font / Panel / Image / Buttonの低レベル描画はUIWorld内部でまとめて行います。
+	uiWorld_.Draw();
 	if (showUIHitboxes_) {
 		uiWorld_.DrawHitboxes3D();
 	}
@@ -456,28 +511,9 @@ void ShowcaseScene::DrawOverlay2D() {
 	const float windowWidth = static_cast<float>(Graphics2D::GetWindowWidth());
 	const float windowHeight = static_cast<float>(Graphics2D::GetWindowHeight());
 
-	// 2D Primitive、Texture / Sprite、Font2Dを一つの小さなカードで紹介します。
-	RoundRect2D{
-		{ 18.0f, windowHeight - 150.0f },
-		{ 360.0f, 132.0f },
-		14.0f,
-	}.Draw(Vector4{ 0.025f, 0.04f, 0.075f, 0.88f });
-	checkerSprite_.leftTop = { 30.0f, windowHeight - 132.0f };
-	checkerSprite_.Draw();
+	// UIWorldとは別に、直接描画APIも特殊演出や一時的なデバッグ表示用として利用できます。
 	Circle2D{ { 144.0f, windowHeight - 84.0f }, 30.0f }.Draw(
-		Vector4{ 0.1f, 0.75f, 1.0f, 0.85f });
-	titleFont_.Draw(
-		"2D / Sprite / Font",
-		{ 185.0f, windowHeight - 124.0f },
-		{ .color = Color::White });
-	uiFont_.Draw(
-		"SPACE: Physics   V: VFX",
-		{ 185.0f, windowHeight - 78.0f },
-		{ .color = Color::LightGray });
-	uiFont_.Draw(
-		"TAB: UI navigation",
-		{ 185.0f, windowHeight - 50.0f },
-		{ .color = Color::LightGray });
+		Vector4{ 0.1f, 0.75f, 1.0f, 0.35f });
 
 	renderTargetPreview_.leftTop = { windowWidth - renderTargetPreview_.size.x - 24.0f, 24.0f };
 	renderTargetPreview_.Draw();
@@ -486,7 +522,6 @@ void ShowcaseScene::DrawOverlay2D() {
 		{ renderTargetPreview_.leftTop.x, renderTargetPreview_.leftTop.y + renderTargetPreview_.size.y + 6.0f },
 		{ .color = Color::Cyan });
 
-	uiWorld_.Draw(uiFont_);
 	if (showUIHitboxes_) {
 		uiWorld_.DrawHitboxes();
 	}
