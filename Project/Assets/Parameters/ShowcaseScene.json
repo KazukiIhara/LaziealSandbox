@@ -1,0 +1,21 @@
+{
+  "Camera": {
+    "Distance": { "type": "Float", "value": 24.0, "editor": { "minimum": 8.0, "maximum": 40.0, "step": 0.5 } }
+  },
+  "Lighting": {
+    "DirectionalIntensity": { "type": "Float", "value": 1.5, "editor": { "minimum": 0.0, "maximum": 4.0, "step": 0.05 } },
+    "PointIntensity": { "type": "Float", "value": 24.0, "editor": { "minimum": 0.0, "maximum": 80.0, "step": 1.0 } }
+  },
+  "Physics": {
+    "InitialBallCount": { "type": "Int32", "value": 8, "editor": { "minimum": 1.0, "maximum": 32.0, "step": 1.0 } },
+    "InitialParticleCount": { "type": "Int32", "value": 3000, "editor": { "minimum": 100.0, "maximum": 20000.0, "step": 100.0 } },
+    "ParticleRadius": { "type": "Float", "value": 0.12, "editor": { "minimum": 0.05, "maximum": 0.25, "step": 0.01 } }
+  },
+  "VFX": {
+    "EmissionRate": { "type": "Float", "value": 120.0, "editor": { "minimum": 0.0, "maximum": 500.0, "step": 5.0 } }
+  },
+  "PostProcess": {
+    "BloomIntensity": { "type": "Float", "value": 0.18, "editor": { "minimum": 0.0, "maximum": 2.0, "step": 0.01 } },
+    "VignetteIntensity": { "type": "Float", "value": 0.2, "editor": { "minimum": 0.0, "maximum": 1.0, "step": 0.01 } }
+  }
+}
