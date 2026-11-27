@@ -1,0 +1,22 @@
+{
+  "Type": "WorldLayout",
+  "Version": 1,
+  "Objects": [
+    {
+      "Id": "CenterPivot",
+      "Name": "Center pivot",
+      "Components": [
+        { "Type": "Transform2D", "Position": [225, 270], "Rotation": 0.6, "Scale": [2, 1.5] },
+        { "Type": "SpriteRenderer", "Texture": "../../Textures/Checker.bmp", "Pivot": [0.5, 0.5] }
+      ]
+    },
+    {
+      "Id": "BottomPivot",
+      "Name": "Bottom center pivot",
+      "Components": [
+        { "Type": "Transform2D", "Position": [460, 270], "Rotation": -0.6, "Scale": [1.5, 2] },
+        { "Type": "SpriteRenderer", "Texture": "../../Textures/Checker.bmp", "Pivot": [0.5, 1] }
+      ]
+    }
+  ]
+}

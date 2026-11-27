@@ -13,8 +13,8 @@ Gitと、C++のデスクトップ開発・Windows SDK・C++ CMakeツールを含
 1. `git clone --recursive <repository-url>` で対象のリポジトリをクローンします。
 2. クローン先のルートでターミナルを開き、`.\Setup.bat` を実行します。submoduleとEffekseerを準備して、利用可能なVisual Studio向けのソリューションを生成します。バージョンを指定する場合は `.\Setup.bat vs2022` または `.\Setup.bat vs2026` を実行します。
 3. バッチに表示された `Project/LaziealSandbox.slnx` または `Project/LaziealSandbox.sln` を開き、`Develop | x64` で `LaziealSandbox` を起動します。
-4. 同じソリューションで `LaziealParameterEditor` をスタートアッププロジェクトにして起動します。クローン内の `Project/Assets/Parameters` が開きます。
-5. `ShowcaseScene.json` の `Fog/Enabled` をオフにして保存します。スタートアッププロジェクトを `LaziealSandbox` に戻して起動すると、3Dシーンのフォグの変化を確認できます。
+4. 同じソリューションで `LaziealLevelEditor` を起動し、`Level Preview` から `Level1.json` を開きます。`Open in UI Edit` から、ボタンの文言などを変えて保存できます。
+5. `LaziealSandbox` のデモで `R` を押すと、保存した配置を読み込み直します。
 
 ## 構成
 
@@ -77,6 +77,18 @@ generated/outputs/<Configuration>/x64
 
 `LaziealParameterEditor.exe` はこの出力先の `ParameterEditor` フォルダに生成されます。
 
+`LaziealLevelEditor.exe` は `LevelEditor` フォルダに生成されます。起動時はトップ画面から `UI Edit`、`World Edit`、`Level Preview` を選べます。各モードで新規作成または既存のJSONを開けます。
+
+`Project/Assets/LevelDatas` の直下に統合レベル、`UI` に画面UI、`World` に2D・3Dの配置ファイルを置きます。サンプルの `Level1.json` は `UI/Level1UI.json` と `World/Level1World.json` を参照します。
+
+`Level Preview` では参照先を差し替えて保存でき、ワールドと画面UIを重ねて確認できます。`Game size` でプレビュー内のゲーム画面サイズを変えられます。`Open in UI Edit` と `Open in World Edit` で参照先を個別に編集できます。UIは階層とギズモで編集でき、`Test buttons` でボタンの反応を確認できます。
+
+ワールド配置ではモデルとスプライトを追加し、`3D` / `2D` プレビューで `Move`、`Rotate`、`Scale` を切り替えて編集できます。3Dプレビューは右ドラッグで回転、ホイールでズームできます。既存の配置サンプルを保存してSandboxで `R` を押すと、変更を読み込み直します。
+
+3種類のデータはいずれもJSONです。ファイルに書き込まれる `Type` は `Level`、`UILayout2D`、`WorldLayout` です。新規保存時の名前にはそれぞれ `.level.json`、`.ui.json`、`.world.json` が提案されます。
+
+ゲームでは `LGF::SetLevelData("Level1.json")` で、参照先のUIと3D配置がRuntimeのフレーム処理で描画されます。3D配置の各オブジェクトは `Transform3D` と `ModelRenderer` を組み合わせて定義できます。
+
 ## 基本的な使い方
 
 アプリケーション側では`LGF/LGF.h`をインクルードし、`Main()`を定義します。エントリーポイントと初期化・終了処理はランタイムが管理します。
@@ -96,18 +108,16 @@ Sandboxの実装は`Project/main.cpp`と`Project/Src`にあります。
 
 ## 現在のサンプル
 
-Sandboxの起動時には `ShowcaseScene` が開き、描画、物理、エフェクトをまとめて試せます。`Project/Src/Scene` には、Foxモデルを使ったスキニング専用のサンプルもあります。
+Sandboxの起動時には `LevelEditorDemoScene` が開きます。`Level1.json` の3D配置とUIを読み込み、テクスチャ付きの箱を2つ表示します。
 
-- 1つのAnimatorとスキニング結果を共有する24体のインスタンス描画
-- 個別のAnimatorで再生する`Survey`と`Run`アニメーション
-- 平行光源、Skybox、Groundによる3Dシーン
-- 640 x 360のRender Targetへ描画したシーンのSprite表示
-- 2Dフォントによるデバッグ情報の表示
+- `矢印キー` でカメラを回転
+- `Q` / `E` でカメラ距離を変更
+- `1` で3D配置、`2` で2Dスプライトのピボット確認に切り替え
+- `R` でレベルを再読み込み
 
-カメラは次のキーで操作できます。
+2Dサンプルは `Project/Assets/LevelDatas/World/Level2DWorld.json` にあります。黄色い点が各スプライトのピボット位置です。
 
-- `矢印キー`: カメラを回転
-- `Q` / `E`: カメラ距離を変更
+描画、物理、エフェクトをまとめて試す `ShowcaseScene` とスキニング専用のサンプルは `Project/Src/Scene` にあります。
 
 ## ランタイム設定
 

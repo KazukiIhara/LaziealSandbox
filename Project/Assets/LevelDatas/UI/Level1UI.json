@@ -1,0 +1,44 @@
+{
+  "Type": "UILayout2D",
+  "Version": 1,
+  "Size": [640, 360],
+  "Elements": [
+    {
+      "Id": "MainCanvas",
+      "Type": "Canvas"
+    },
+    {
+      "Id": "LevelPanel",
+      "Type": "Panel",
+      "Parent": "MainCanvas",
+      "Position": [-16, 16],
+      "Size": [240, 112],
+      "Anchor": [1, 0],
+      "Pivot": [1, 0]
+    },
+    {
+      "Id": "LevelImage",
+      "Type": "Image",
+      "Parent": "LevelPanel",
+      "Position": [16, 16],
+      "Size": [80, 80],
+      "Texture": "../../Textures/Checker.bmp"
+    },
+    {
+      "Id": "LevelLabel",
+      "Type": "Label",
+      "Parent": "LevelPanel",
+      "Position": [112, 14],
+      "Size": [112, 30],
+      "Text": "Level 1"
+    },
+    {
+      "Id": "PlayButton",
+      "Type": "Button",
+      "Parent": "LevelPanel",
+      "Position": [112, 52],
+      "Size": [112, 40],
+      "Text": "Play"
+    }
+  ]
+}

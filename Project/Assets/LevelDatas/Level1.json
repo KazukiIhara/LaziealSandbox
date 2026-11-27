@@ -1,0 +1,6 @@
+{
+  "Type": "Level",
+  "Version": 1,
+  "UI": "UI/Level1UI.json",
+  "World": "World/Level1World.json"
+}

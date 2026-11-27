@@ -1,0 +1,27 @@
+{
+  "Type": "WorldLayout",
+  "Version": 1,
+  "Objects": [
+    {
+      "Id": "Box01",
+      "Name": "Left box",
+      "Components": [
+        { "Type": "Transform3D", "Position": [-1.4, 0, 0] },
+        { "Type": "ModelRenderer", "Model": "../../Models/BoxTextured/BoxTextured.glb" }
+      ]
+    },
+    {
+      "Id": "Box02",
+      "Name": "Right box",
+      "Components": [
+        {
+          "Type": "Transform3D",
+          "Position": [1.4, 0, 0.6],
+          "Rotation": [0, 0.258819, 0, 0.965926],
+          "Scale": [1.1, 1.1, 1.1]
+        },
+        { "Type": "ModelRenderer", "Model": "../../Models/BoxTextured/BoxTextured.glb" }
+      ]
+    }
+  ]
+}

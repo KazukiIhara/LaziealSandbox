@@ -162,3 +162,10 @@ defineParameterEditor(
     projectDirectory,
     "../../generated/outputs/%{cfg.buildcfg}/%{cfg.platform}",
     projectDirectory .. "/Assets/Parameters")
+
+local defineLevelEditor = dofile(runtimeDirectory .. "/Tools/LevelEditor/premake5.lua")
+defineLevelEditor(
+    runtimeDirectory,
+    projectDirectory,
+    "../../generated/outputs/%{cfg.buildcfg}/%{cfg.platform}",
+    projectDirectory .. "/Assets/LevelDatas")
