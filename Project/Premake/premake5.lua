@@ -153,3 +153,12 @@ project "LaziealSandbox"
         }
 
     filter {}
+
+local runtimeDirectory = path.getabsolute("../../Dependencies/LaziealRuntime")
+local projectDirectory = path.getabsolute("..")
+local defineParameterEditor = dofile(runtimeDirectory .. "/Tools/ParameterEditor/premake5.lua")
+defineParameterEditor(
+    runtimeDirectory,
+    projectDirectory,
+    "../../generated/outputs/%{cfg.buildcfg}/%{cfg.platform}",
+    projectDirectory .. "/Assets/Parameters")

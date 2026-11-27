@@ -1,3 +1,3 @@
 [submodule "Dependencies/LaziealRuntime"]
 	path = Dependencies/LaziealRuntime
-	url = ../LaziealRuntime
+	url = https://github.com/KazukiIhara/LaziealRuntime.git

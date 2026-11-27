@@ -6,6 +6,16 @@ DirectX 12とC++20で開発している自作ゲームフレームワークの�
 
 現在は開発中です。APIやプロジェクト構成は予告なく変更される場合があります。
 
+## クローンして試す
+
+Gitと、C++のデスクトップ開発・Windows SDK・C++ CMakeツールを含むVisual Studioを用意します。GitHubのテンプレートから新しいリポジトリを作った場合は、そのリポジトリをクローンして同じ手順を使えます。
+
+1. `git clone --recursive <repository-url>` で対象のリポジトリをクローンします。
+2. クローン先のルートでターミナルを開き、`.\Setup.bat` を実行します。submoduleとEffekseerを準備して、利用可能なVisual Studio向けのソリューションを生成します。バージョンを指定する場合は `.\Setup.bat vs2022` または `.\Setup.bat vs2026` を実行します。
+3. バッチに表示された `Project/LaziealSandbox.slnx` または `Project/LaziealSandbox.sln` を開き、`Develop | x64` で `LaziealSandbox` を起動します。
+4. 同じソリューションで `LaziealParameterEditor` をスタートアッププロジェクトにして起動します。クローン内の `Project/Assets/Parameters` が開きます。
+5. `ShowcaseScene.json` の `Fog/Enabled` をオフにして保存します。スタートアッププロジェクトを `LaziealSandbox` に戻して起動すると、3Dシーンのフォグの変化を確認できます。
+
 ## 構成
 
 このリポジトリは、次の3層で構成されています。
@@ -57,36 +67,15 @@ DirectX 12とC++20で開発している自作ゲームフレームワークの�
   - Shader Model 6.6以上
   - Resource Binding Tier 3
 
-## セットアップ
-
-依存リポジトリを含めてクローンします。
-
-```powershell
-git clone --recursive <repository-url>
-```
-
-通常のクローンを行った場合は、後からsubmoduleを取得できます。
-
-```powershell
-git submodule update --init --recursive
-```
-
-使用するVisual Studioに対応したバッチファイルを実行します。
-
-```powershell
-cd Project
-./Premake.bat
-```
-
-`Premake.bat`はVisual Studio 2026用です。Visual Studio 2022を使用する場合は、代わりに`PremakeVS2022.bat`を実行してください。
-
-生成された`Project/LaziealSandbox.slnx`または`Project/LaziealSandbox.sln`を開き、`x64`の`Develop`構成をビルドします。
+## ビルド出力
 
 ビルド結果は次のディレクトリへ出力されます。
 
 ```text
 generated/outputs/<Configuration>/x64
 ```
+
+`LaziealParameterEditor.exe` はこの出力先の `ParameterEditor` フォルダに生成されます。
 
 ## 基本的な使い方
 
@@ -107,7 +96,7 @@ Sandboxの実装は`Project/main.cpp`と`Project/Src`にあります。
 
 ## 現在のサンプル
 
-現在のSandboxでは、Foxモデルを使用したスキニングアニメーションを表示します。
+Sandboxの起動時には `ShowcaseScene` が開き、描画、物理、エフェクトをまとめて試せます。`Project/Src/Scene` には、Foxモデルを使ったスキニング専用のサンプルもあります。
 
 - 1つのAnimatorとスキニング結果を共有する24体のインスタンス描画
 - 個別のAnimatorで再生する`Survey`と`Run`アニメーション
@@ -167,7 +156,9 @@ const float speed = LGF::Parameter::GetOr<float>(
 
 対応する型は`bool`、`int32_t`、`float`、`Vector2`、`Vector3`、`Vector4`、`std::string`です。
 
-パラメータの作成と編集には、LaziealRuntimeに含まれる`LaziealParameterEditor`を使用できます。
+パラメータの作成と編集には、LaziealRuntimeに付属する `LaziealParameterEditor` を使えます。Sandboxは同じソリューションに独立した実行プロジェクトとして組み込み、ソリューションを生成したクローン内のパラメータフォルダを起動時に指定します。エディタはSandboxが読み込むJSONを直接編集します。
+
+エディタを単体で起動するときは、`LaziealParameterEditor.exe --parameter-directory "<フォルダのパス>"` で編集先を指定できます。引数を省略した場合は前回選んだフォルダが開き、初回はフォルダを選択できます。
 
 ## ディレクトリ
 
