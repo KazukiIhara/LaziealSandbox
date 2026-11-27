@@ -50,6 +50,7 @@ private:
 	LGF::PointLight pointLight_;
 	LGF::ToonLighting toonLighting_;
 	LGF::Skybox skybox_;
+	LGF::LinearFogSettings linearFog_;
 	LGF::Ground3D ground_;
 	LGF::Grid3D grid_;
 	LGF::Sphere3D sphere_;

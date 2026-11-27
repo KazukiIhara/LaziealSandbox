@@ -48,6 +48,12 @@ ShowcaseScene::ShowcaseScene() :
 		Parameter::GetOr<float>("ShowcaseScene.json", "Lighting/DirectionalIntensity", 1.5f)),
 	pointLight_({ 0.0f, 4.0f, -1.0f }, { 0.15f, 0.55f, 1.0f, 1.0f }, 24.0f, 14.0f),
 	skybox_(kEnvironmentPath),
+	linearFog_{
+		.enabled = Parameter::GetOr<bool>("ShowcaseScene.json", "Fog/Enabled", true),
+		.color = Parameter::GetOr<Vector3>("ShowcaseScene.json", "Fog/Color", { 0.28f, 0.34f, 0.42f }),
+		.startDistance = Parameter::GetOr<float>("ShowcaseScene.json", "Fog/StartDistance", 18.0f),
+		.endDistance = Parameter::GetOr<float>("ShowcaseScene.json", "Fog/EndDistance", 40.0f),
+	},
 	ground_(32.0f, 26.0f),
 	grid_(26.0f, 1.0f),
 	sphere_(1.0f),
@@ -358,7 +364,8 @@ void ShowcaseScene::DrawWorld() {
 	pointLight_.position = { std::sin(elapsedTime_) * 5.0f, 4.0f, -1.0f };
 	pointLight_.SetScene();
 	toonLighting_.SetScene();
-	skybox_.SetScene();
+	//skybox_.SetScene();
+	Graphics3D::SetLinearFog(linearFog_);
 
 	ground_.Draw(
 		Math::MakeTranslateMatrix({ 0.0f, -1.5f, 1.0f }),
@@ -394,6 +401,22 @@ void ShowcaseScene::DrawWorld() {
 				.color = { 0.25f, 0.95f, 0.48f, 1.0f },
 				.roughness = 0.55f,
 			});
+
+		// 同じ色と形の柱を距離を変えて置き、フォグの濃さを見比べる。
+		constexpr Vector3 fogSamplePositions[] = {
+			{ 3.0f, 0.2f, -10.0f },
+			{ 7.0f, 0.2f, 4.0f },
+			{ 12.5f, 0.2f, 12.5f },
+		};
+		const Material3D fogSampleMaterial{
+			.color = Color::Orange,
+			.unlit = true,
+		};
+		for (const Vector3& position : fogSamplePositions) {
+			box_.Draw(
+				MakeWorldMatrix({ 0.6f, 1.7f, 0.6f }, position),
+				fogSampleMaterial);
+		}
 	}
 
 	if (showModel_) {
@@ -431,7 +454,12 @@ void ShowcaseScene::DrawWorld() {
 }
 
 void ShowcaseScene::DrawRenderTarget() {
-	Graphics3D::BeginRenderPass(renderTarget_, renderTargetCamera_);
+	Graphics3D::BeginRenderPass(
+		renderTarget_,
+		RenderPassSettings{
+			.camera = &renderTargetCamera_,
+			.fog = LinearFogSettings{ .enabled = false },
+		});
 	directionalLight_.SetScene();
 	ground_.Draw(
 		Math::MakeTranslateMatrix({ 0.0f, -1.0f, 0.0f }),
@@ -540,6 +568,23 @@ void ShowcaseScene::DrawControlPanel() {
 
 	if (ImGui::CollapsingHeader("Feature checklist", ImGuiTreeNodeFlags_DefaultOpen)) {
 		DrawFeatureList();
+	}
+
+	if (ImGui::CollapsingHeader("Linear Fog", ImGuiTreeNodeFlags_DefaultOpen)) {
+		ImGui::Checkbox("Enable fog", &linearFog_.enabled);
+		ImGui::ColorEdit3("Fog color", &linearFog_.color.x, ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_Float);
+		if (ImGui::DragFloatRange2(
+			"Distance",
+			&linearFog_.startDistance,
+			&linearFog_.endDistance,
+			0.5f,
+			0.0f,
+			0.0f,
+			"Start %.1f",
+			"End %.1f")) {
+			linearFog_.startDistance = std::max(linearFog_.startDistance, 0.0f);
+			linearFog_.endDistance = std::max(linearFog_.endDistance, linearFog_.startDistance + 0.1f);
+		}
 	}
 
 	if (ImGui::CollapsingHeader("3D rendering", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -694,7 +739,7 @@ void ShowcaseScene::DrawControlPanel() {
 }
 
 void ShowcaseScene::DrawFeatureList() const {
-	ImGui::BulletText("3D primitives / PBR and Toon materials / lights / skybox");
+	ImGui::BulletText("3D primitives / PBR and Toon / lights / skybox / fog");
 	ImGui::BulletText("glTF model / shared skinning / instancing / meshlet debug");
 	ImGui::BulletText("RenderTargetTexture / Texture / Sprite");
 	ImGui::BulletText("2D and 3D fonts / primitives / UIWorld");
